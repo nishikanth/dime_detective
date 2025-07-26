@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Payments Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- SheetJS library for Excel support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #fdf6e3 0%, #f5e6d3 100%);
+            min-height: 100vh;
+        }
+
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+
+        .tab-button.active {
+            border-bottom: 3px solid #d97706;
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .tab-button:not(.active):hover {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        /* Custom color scheme - warm tones */
+        .primary-bg {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .secondary-bg {
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        }
+
+        .tertiary-bg {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .quaternary-bg {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .quinary-bg {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        /* Collapsible sections */
+        .year-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .year-header {
+            cursor: pointer;
+            padding: 1rem;
+            background: #f9fafb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .year-header:hover {
+            background: #f3f4f6;
+        }
+
+        .year-content {
+            padding: 0 1rem 1rem 1rem;
+            display: none;
+        }
+
+        .year-content.expanded {
+            display: block;
+        }
+
+        .chevron {
+            transition: transform 0.2s;
+        }
+
+        .chevron.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Grand total section */
+        .grand-total-section {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        /* Auth styles */
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .google-btn:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .google-btn:active {
+            transform: translateY(1px);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-amber-50 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loading mb-4"></div>
+            <p class="text-amber-700">Loading your data...</p>
+        </div>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="hidden">
+        <div class="auth-container">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-amber-900 mb-2">💰 Work Tracker</h1>
+                <p class="text-amber-700 mb-6">Sign in to access your financial data anywhere</p>
+
+                <button id="googleSignInBtn" class="google-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285f4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34a853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#fbbc05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#ea4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <p class="text-xs text-amber-600 mt-4">
+                    Your data is securely stored and only accessible by you
+                </p>
+            </div>
+
+            <div id="authError"
+                class="hidden mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="max-w-6xl mx-auto p-6 min-h-screen">
+            <!-- Header with User Info -->
+            <div class="text-center mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <div></div>
+                    <h1 class="text-3xl font-bold text-amber-900">💰 Work Hours & Earnings Tracker</h1>
+                    <div class="user-info">
+                        <img id="userAvatar" class="user-avatar" src="" alt="User">
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-white" id="userName"></div>
+                            <button onclick="signOut()" class="text-xs text-amber-200 hover:text-white">
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-amber-700">Track work, expenses, insurance, and payroll - complete financial overview</p>
+                <div class="text-center mt-2">
+                    <span class="inline-flex items-center gap-2 text-sm text-green-600">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Connected to Cloud
+                    </span>
+                </div>
+            </div>
+
+            <!-- Companies Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-amber-800">🏢 Companies & Rates</h2>
+
+                <!-- Add Company Form -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+                    <input type="text" id="companyName" placeholder="Company name"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <input type="number" id="companyRate" placeholder="Hourly rate ($)" step="0.01"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <input type="number" id="companyPercent" placeholder="Deduction %" step="0.01" min="0" max="100"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <button onclick="addCompany()"
+                        class="px-6 py-2 primary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        + Add
+                    </button>
+                </div>
+                <div id="companiesList" class="space-y-3"></div>
+            </div>
+
+            <!-- Add Work Entry Form -->
+            <div id="addEntrySection" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-amber-800">➕ Add Work Entry</h2>
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <select id="entryCompany"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                        <option value="">Select Company</option>
+                    </select>
+                    <select id="entryMonth"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                        <option value="">Select Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="entryYear"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <input type="number" id="entryHours" placeholder="Hours" step="0.5"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <input type="number" id="entryRate" placeholder="Rate/hr" step="0.01"
+                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <button onclick="addWorkEntry()"
+                        class="px-4 py-2 quaternary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        + Add Entry
+                    </button>
+                </div>
+                <p class="text-sm text-amber-600 mt-2">💡 Rate is pre-filled from company settings but can be adjusted per entry</p>
+            </div>
+
+            <!-- Expenses Form -->
+            <div id="expensesForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-purple-800">💳 Add Expense</h2>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <input type="date" id="expenseDate"
+                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="expenseName" placeholder="Expense name"
+                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <select id="expenseType"
+                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select Type</option>
+                        <option value="expense">💸 Business Expense</option>
+                        <option value="income">💰 Other Expense</option>
+                    </select>
+                    <input type="number" id="expenseAmount" placeholder="Amount ($)" step="0.01"
+                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <button onclick="addExpense()"
+                        class="px-4 py-2 tertiary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        + Add Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Insurance Form -->
+            <div id="insuranceForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-rose-800">🛡️ Add Insurance Payment</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="insuranceMonth"
+                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
+                        <option value="">Select Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="insuranceYear"
+                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <input type="number" id="insuranceAmount" placeholder="Amount ($)" step="0.01"
+                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
+                    <button onclick="addInsurance()"
+                        class="px-4 py-2 secondary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        + Add Payment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payroll Form -->
+            <div id="payrollForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-blue-800">💼 Add Payroll Entry</h2>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <select id="payrollMonth"
+                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="payrollYear"
+                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <input type="number" id="payrollHours" placeholder="Salary Hours" step="0.5"
+                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="payrollRate" placeholder="Rate (optional)" step="0.01"
+                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="payrollGross" placeholder="Gross Pay" step="0.01"
+                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button onclick="addPayroll()"
+                        class="px-4 py-2 quinary-bg text-white rounded-lg hover:opacity-90 transition-opacity col-span-full md:col-span-1">
+                        + Add Entry
+                    </button>
+                </div>
+                <p class="text-sm text-blue-600 mt-2">💡 Enter Hours + Rate OR Hours + Gross Pay</p>
+            </div>
+
+            <!-- Tabbed Interface -->
+            <div id="tabbedContainer" class="bg-white rounded-xl shadow-lg overflow-hidden" style="display: none;">
+                <div class="border-b border-gray-200">
+                    <div class="flex overflow-x-auto" id="tabHeaders"></div>
+                </div>
+                <div id="tabContent" class="p-6"></div>
+            </div>
+
+            <!-- Grand Total Section -->
+            <div id="grandTotalSection" class="grand-total-section" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">📊 Financial Summary</h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="grandTotalContent"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="bg-white rounded-xl shadow-lg p-8 text-center">
+                <div class="text-6xl mb-4">🏢</div>
+                <h3 class="text-xl font-semibold text-amber-700 mb-2">No Companies Added</h3>
+                <p class="text-amber-600">Add your first company above to start tracking!</p>
+            </div>
+
+            <!-- Export/Import -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-amber-600 mb-4">☁️ Data automatically synced to cloud</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="exportToExcel()"
+                        class="px-4 py-2 primary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        📥 Export to Excel
+                    </button>
+                    <label
+                        class="px-4 py-2 quaternary-bg text-white rounded-lg hover:opacity-90 transition-opacity cursor-pointer">
+                        📤 Import from Excel
+                        <input type="file" accept=".xlsx,.xls" onchange="importFromExcel(this)" style="display: none;">
+                    </label>
+                    <button onclick="clearAllData()"
+                        class="px-4 py-2 secondary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ FIREBASE CONFIGURATION ============
+        // 🔥 REPLACE THIS WITH YOUR CONFIG FROM STEP 5!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNASMgPhomJjFOtcnuRsZPdtXhanNW7jI",
+            authDomain: "dime-detective.firebaseapp.com",
+            projectId: "dime-detective",
+            storageBucket: "dime-detective.firebasestorage.app",
+            messagingSenderId: "821408194707",
+            appId: "1:821408194707:web:e5aa9ab16bd497770b6d66"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Google Auth Provider
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+
+        // ============ GLOBAL VARIABLES ============
+        let currentUser = null;
+        let companies = [];
+        let workRecords = [];
+        let expenses = [];
+        let insurance = [];
+        let payroll = [];
+        let activeTab = 'companies';
+        let activeCompanyId = null;
+        let expandedYears = {};
+
+        // ============ AUTHENTICATION FUNCTIONS ============
+        function showAuthScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            // Update user info in header
+            document.getElementById('userName').textContent = currentUser.displayName;
+            document.getElementById('userAvatar').src = currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName);
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function clearAuthError() {
+            document.getElementById('authError').classList.add('hidden');
+        }
+
+        async function signInWithGoogle() {
+            try {
+                clearAuthError();
+                const result = await auth.signInWithPopup(googleProvider);
+                currentUser = result.user;
+                console.log('Google sign-in successful:', currentUser.displayName);
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                showAuthError('Sign-in failed. Please try again.');
+            }
+        }
+
+        async function signOut() {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                companies = [];
+                workRecords = [];
+                expenses = [];
+                insurance = [];
+                payroll = [];
+                expandedYears = {};
+                showAuthScreen();
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        }
+
+        // ============ FIREBASE DATA FUNCTIONS ============
+        async function saveDataToFirebase() {
+            if (!currentUser) return;
+
+            const userData = {
+                companies,
+                workRecords,
+                expenses,
+                insurance,
+                payroll,
+                expandedYears,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('users').doc(currentUser.uid).set(userData);
+                console.log('✅ Data saved to cloud');
+            } catch (error) {
+                console.error('❌ Error saving data:', error);
+                alert('Error saving data. Please check your connection.');
+            }
+        }
+
+        async function loadDataFromFirebase() {
+            if (!currentUser) return;
+
+            try {
+                const doc = await db.collection('users').doc(currentUser.uid).get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    companies = data.companies || [];
+                    workRecords = data.workRecords || [];
+                    expenses = data.expenses || [];
+                    insurance = data.insurance || [];
+                    payroll = data.payroll || [];
+                    expandedYears = data.expandedYears || {};
+                    console.log('✅ Data loaded from cloud');
+                } else {
+                    console.log('No existing data found - starting fresh');
+                }
+            } catch (error) {
+                console.error('❌ Error loading data:', error);
+                alert('Error loading data. Please refresh the page.');
+            }
+        }
+
+        // ============ AUTH STATE LISTENER ============
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadDataFromFirebase();
+                showMainApp();
+                renderAll();
+            } else {
+                currentUser = null;
+                showAuthScreen();
+            }
+        });
+
+        // ============ DATA MANAGEMENT FUNCTIONS ============
+        function calculateActualRate(baseRate, percentage) {
+            const deduction = baseRate * (percentage / 100);
+            const result = baseRate - deduction;
+            return parseFloat(result.toFixed(1));
+        }
+
+        async function addCompany() {
+            const name = document.getElementById('companyName').value.trim();
+            const rate = parseFloat(document.getElementById('companyRate').value);
+            const percent = parseFloat(document.getElementById('companyPercent').value) || 0;
+
+            if (name && rate) {
+                const actualRate = calculateActualRate(rate, percent);
+
+                companies.push({
+                    id: Date.now(),
+                    name: name,
+                    baseRate: rate,
+                    deductionPercent: percent,
+                    payRate: actualRate
+                });
+
+                document.getElementById('companyName').value = '';
+                document.getElementById('companyRate').value = '';
+                document.getElementById('companyPercent').value = '';
+
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        async function addWorkEntry() {
+            const companyId = parseInt(document.getElementById('entryCompany').value);
+            const month = document.getElementById('entryMonth').value;
+            const year = parseInt(document.getElementById('entryYear').value);
+            const hours = parseFloat(document.getElementById('entryHours').value);
+            const rate = parseFloat(document.getElementById('entryRate').value);
+
+            if (companyId && month && year && hours && rate) {
+                const monthKey = `${year}-${month}`;
+                const existingIndex = workRecords.findIndex(
+                    r => r.companyId === companyId && r.monthKey === monthKey
+                );
+
+                if (existingIndex >= 0) {
+                    workRecords[existingIndex].hours = hours;
+                    workRecords[existingIndex].rate = rate;
+                } else {
+                    workRecords.push({
+                        id: Date.now(),
+                        companyId: companyId,
+                        monthKey: monthKey,
+                        month: month,
+                        year: year,
+                        hours: hours,
+                        rate: rate
+                    });
+                }
+
+                document.getElementById('entryCompany').value = '';
+                document.getElementById('entryMonth').value = '';
+                document.getElementById('entryHours').value = '';
+                document.getElementById('entryRate').value = '';
+
+                activeTab = 'companies';
+                activeCompanyId = companyId;
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        async function addExpense() {
+            const date = document.getElementById('expenseDate').value;
+            const name = document.getElementById('expenseName').value.trim();
+            const type = document.getElementById('expenseType').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+            if (date && name && type && amount) {
+                expenses.push({
+                    id: Date.now(),
+                    date: date,
+                    name: name,
+                    type: type,
+                    amount: amount
+                });
+
+                document.getElementById('expenseDate').value = '';
+                document.getElementById('expenseName').value = '';
+                document.getElementById('expenseType').value = '';
+                document.getElementById('expenseAmount').value = '';
+
+                activeTab = 'expenses';
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        async function addInsurance() {
+            const month = document.getElementById('insuranceMonth').value;
+            const year = parseInt(document.getElementById('insuranceYear').value);
+            const amount = parseFloat(document.getElementById('insuranceAmount').value);
+
+            if (month && year && amount) {
+                const monthKey = `${year}-${month}`;
+                const existingIndex = insurance.findIndex(i => i.monthKey === monthKey);
+
+                if (existingIndex >= 0) {
+                    insurance[existingIndex].amount = amount;
+                } else {
+                    insurance.push({
+                        id: Date.now(),
+                        monthKey: monthKey,
+                        month: month,
+                        year: year,
+                        amount: amount
+                    });
+                }
+
+                document.getElementById('insuranceMonth').value = '';
+                document.getElementById('insuranceAmount').value = '';
+
+                activeTab = 'insurance';
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        async function addPayroll() {
+            const month = document.getElementById('payrollMonth').value;
+            const year = parseInt(document.getElementById('payrollYear').value);
+            const hours = parseFloat(document.getElementById('payrollHours').value);
+            const rate = parseFloat(document.getElementById('payrollRate').value) || 0;
+            const grossPay = parseFloat(document.getElementById('payrollGross').value) || 0;
+
+            if (month && year && hours) {
+                const monthKey = `${year}-${month}`;
+                const existingIndex = payroll.findIndex(p => p.monthKey === monthKey);
+
+                let finalGrossPay = grossPay;
+                let finalRate = rate;
+
+                if (rate > 0 && grossPay === 0) {
+                    finalGrossPay = hours * rate;
+                } else if (grossPay > 0 && rate === 0) {
+                    finalRate = grossPay / hours;
+                } else if (rate > 0 && grossPay > 0) {
+                    finalGrossPay = grossPay;
+                    finalRate = grossPay / hours;
+                }
+
+                const payrollEntry = {
+                    id: Date.now(),
+                    monthKey: monthKey,
+                    month: month,
+                    year: year,
+                    hours: hours,
+                    rate: finalRate,
+                    grossPay: finalGrossPay
+                };
+
+                if (existingIndex >= 0) {
+                    payroll[existingIndex] = { ...payroll[existingIndex], ...payrollEntry };
+                } else {
+                    payroll.push(payrollEntry);
+                }
+
+                document.getElementById('payrollMonth').value = '';
+                document.getElementById('payrollHours').value = '';
+                document.getElementById('payrollRate').value = '';
+                document.getElementById('payrollGross').value = '';
+
+                activeTab = 'payroll';
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        // Update functions with Firebase sync
+        async function updateHours(id, newHours) {
+            const record = workRecords.find(r => r.id === id);
+            if (record) {
+                record.hours = parseFloat(newHours) || 0;
+                await saveDataToFirebase();
+                renderTabs();
+            }
+        }
+
+        async function updateRate(id, newRate) {
+            const record = workRecords.find(r => r.id === id);
+            if (record) {
+                record.rate = parseFloat(newRate) || 0;
+                await saveDataToFirebase();
+                renderTabs();
+            }
+        }
+
+        async function updateExpenseAmount(id, newAmount) {
+            const expense = expenses.find(e => e.id === id);
+            if (expense) {
+                expense.amount = parseFloat(newAmount) || 0;
+                await saveDataToFirebase();
+                renderTabs();
+            }
+        }
+
+        async function updateInsuranceAmount(id, newAmount) {
+            const ins = insurance.find(i => i.id === id);
+            if (ins) {
+                ins.amount = parseFloat(newAmount) || 0;
+                await saveDataToFirebase();
+                renderTabs();
+            }
+        }
+
+        async function updatePayrollGross(id, newGross) {
+            const pr = payroll.find(p => p.id === id);
+            if (pr) {
+                pr.grossPay = parseFloat(newGross) || 0;
+                pr.rate = pr.hours > 0 ? pr.grossPay / pr.hours : 0;
+                await saveDataToFirebase();
+                renderTabs();
+            }
+        }
+
+        // Delete functions with Firebase sync
+        async function deleteCompany(id) {
+            if (confirm('Delete this company and all its work records?')) {
+                companies = companies.filter(c => c.id !== id);
+                workRecords = workRecords.filter(r => r.companyId !== id);
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        async function deleteWorkEntry(id) {
+            workRecords = workRecords.filter(r => r.id !== id);
+            await saveDataToFirebase();
+            renderAll();
+        }
+
+        async function deleteExpense(id) {
+            expenses = expenses.filter(e => e.id !== id);
+            await saveDataToFirebase();
+            renderAll();
+        }
+
+        async function deleteInsurance(id) {
+            insurance = insurance.filter(i => i.id !== id);
+            await saveDataToFirebase();
+            renderAll();
+        }
+
+        async function deletePayroll(id) {
+            payroll = payroll.filter(p => p.id !== id);
+            await saveDataToFirebase();
+            renderAll();
+        }
+
+        // Toggle year expansion
+        async function toggleYear(tabKey, year) {
+            if (!expandedYears[tabKey]) {
+                expandedYears[tabKey] = {};
+            }
+            expandedYears[tabKey][year] = !expandedYears[tabKey][year];
+            await saveDataToFirebase();
+            renderTabs();
+        }
+
+        function isYearExpanded(tabKey, year) {
+            return expandedYears[tabKey] && expandedYears[tabKey][year];
+        }
+
+        function switchTab(tab, companyId = null) {
+            activeTab = tab;
+            if (companyId) activeCompanyId = companyId;
+            renderAll();
+        }
+
+        function updateCompanySelect() {
+            const select = document.getElementById('entryCompany');
+            select.addEventListener('change', function () {
+                const companyId = parseInt(this.value);
+                if (companyId) {
+                    const company = getCompany(companyId);
+                    if (company) {
+                        document.getElementById('entryRate').value = company.payRate;
+                    }
+                } else {
+                    document.getElementById('entryRate').value = '';
+                }
+            });
+        }
+
+        // Helper functions
+        function getMonthDisplay(month, year) {
+            const months = {
+                '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
+                '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Aug',
+                '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
+            };
+            return `${months[month]}'${year.toString().slice(-2)}`;
+        }
+
+        function getMonthName(month) {
+            const months = {
+                '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+                '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+                '09': 'September', '10': 'October', '11': 'November', '12': 'December'
+            };
+            return months[month] || '';
+        }
+
+        function getCompany(id) {
+            return companies.find(c => c.id === id);
+        }
+
+        async function editCompany(id) {
+            const company = getCompany(id);
+            if (!company) return;
+
+            const newName = prompt('Enter new company name:', company.name);
+            const newRate = prompt('Enter new base hourly rate:', company.baseRate);
+            const newPercent = prompt('Enter new deduction percentage:', company.deductionPercent);
+
+            if (newName && newRate) {
+                company.name = newName.trim();
+                company.baseRate = parseFloat(newRate);
+                company.deductionPercent = parseFloat(newPercent) || 0;
+                company.payRate = calculateActualRate(company.baseRate, company.deductionPercent);
+                await saveDataToFirebase();
+                renderAll();
+            }
+        }
+
+        function calculateGrandTotals() {
+            const companyTotals = companies.reduce((sum, company) => {
+                const companyRecords = workRecords.filter(r => r.companyId === company.id);
+                const companyTotal = companyRecords.reduce((total, r) => total + (r.hours * r.rate), 0);
+                return sum + companyTotal;
+            }, 0);
+
+            // Total expenses (both types are now added together)
+            const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            const totalInsurance = insurance.reduce((sum, i) => sum + i.amount, 0);
+            const totalPayroll = payroll.reduce((sum, p) => sum + p.grossPay, 0);
+
+            // Grand total calculation: Income - Expenses - Insurance - Payroll
+            const grandTotal = companyTotals - totalExpenses - totalInsurance - totalPayroll;
+
+            return {
+                companyTotals,
+                totalExpenses,
+                totalInsurance,
+                totalPayroll,
+                grandTotal
+            };
+        }
+
+        // Group records by year
+        function groupByYear(records, getYear) {
+            const grouped = {};
+            records.forEach(record => {
+                const year = getYear(record);
+                if (!grouped[year]) {
+                    grouped[year] = [];
+                }
+                grouped[year].push(record);
+            });
+            return grouped;
+        }
+
+        // Render companies list
+        function renderCompanies() {
+            const container = document.getElementById('companiesList');
+
+            if (companies.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-amber-600">No companies added yet.</div>';
+                document.getElementById('addEntrySection').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tabbedContainer').style.display = 'none';
+                document.getElementById('expensesForm').style.display = 'none';
+                document.getElementById('insuranceForm').style.display = 'none';
+                document.getElementById('payrollForm').style.display = 'none';
+                document.getElementById('grandTotalSection').style.display = 'none';
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+
+                container.innerHTML = companies.map(company => `
+            <div class="flex items-center justify-between p-4 border border-amber-200 rounded-lg bg-amber-50">
+                <div>
+                    <h3 class="font-semibold text-amber-900">${company.name}</h3>
+                    <p class="text-sm text-amber-700">
+                        Base: $${company.baseRate.toFixed(2)}/hr 
+                        ${company.deductionPercent > 0 ? `(-${company.deductionPercent}%)` : ''} 
+                        = <strong>$${company.payRate.toFixed(2)}/hr</strong>
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editCompany(${company.id})" 
+                            class="px-3 py-1 text-amber-700 hover:bg-amber-100 rounded">Edit</button>
+                    <button onclick="deleteCompany(${company.id})" 
+                            class="px-3 py-1 text-rose-700 hover:bg-rose-100 rounded">Delete</button>
+                </div>
+            </div>
+        `).join('');
+            }
+
+            const dropdown = document.getElementById('entryCompany');
+            dropdown.innerHTML = '<option value="">Select Company</option>' +
+                companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            updateCompanySelect();
+        }
+
+        // Render tabs
+        function renderTabs() {
+            const container = document.getElementById('tabbedContainer');
+            const tabHeaders = document.getElementById('tabHeaders');
+
+            // Check if we have any data to show tabs
+            const companiesWithWork = companies.filter(c =>
+                workRecords.some(r => r.companyId === c.id)
+            );
+
+            const hasAnyData = companiesWithWork.length > 0 || expenses.length > 0 ||
+                insurance.length > 0 || payroll.length > 0;
+
+            if (!hasAnyData && companies.length > 0) {
+                // Show forms if we have companies but no data
+                document.getElementById('addEntrySection').style.display = 'block';
+                document.getElementById('expensesForm').style.display = 'block';
+                document.getElementById('insuranceForm').style.display = 'block';
+                document.getElementById('payrollForm').style.display = 'block';
+                container.style.display = 'none';
+                document.getElementById('grandTotalSection').style.display = 'none';
+                return;
+            } else if (!hasAnyData) {
+                container.style.display = 'none';
+                document.getElementById('grandTotalSection').style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            document.getElementById('grandTotalSection').style.display = 'block';
+
+            // Build tab headers
+            let tabsHTML = '';
+
+            // Company tabs
+            companiesWithWork.forEach(company => {
+                const companyRecords = workRecords.filter(r => r.companyId === company.id);
+                const totalPay = companyRecords.reduce((sum, r) => sum + (r.hours * r.rate), 0);
+                const isActive = activeTab === 'companies' && activeCompanyId === company.id;
+
+                tabsHTML += `
+            <button onclick="switchTab('companies', ${company.id})" 
+                    class="tab-button px-6 py-4 text-left whitespace-nowrap ${isActive ? 'active' : 'text-amber-700'}">
+                <div class="font-semibold">${company.name}</div>
+                <div class="text-sm opacity-75">$${totalPay.toFixed(2)}</div>
+            </button>
+        `;
+            });
+
+            // Expenses tab - UPDATED to show total expenses
+            const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const isExpensesActive = activeTab === 'expenses';
+
+            tabsHTML += `
+        <button onclick="switchTab('expenses')" 
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isExpensesActive ? 'active' : 'text-purple-700'}">
+            <div class="font-semibold">💳 Expenses</div>
+            <div class="text-sm opacity-75">$${totalExpenses.toFixed(2)}</div>
+        </button>
+    `;
+
+            // Insurance tab
+            const totalInsurance = insurance.reduce((sum, i) => sum + i.amount, 0);
+            const isInsuranceActive = activeTab === 'insurance';
+
+            tabsHTML += `
+        <button onclick="switchTab('insurance')" 
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isInsuranceActive ? 'active' : 'text-rose-700'}">
+            <div class="font-semibold">🛡️ Insurance</div>
+            <div class="text-sm opacity-75">$${totalInsurance.toFixed(2)}</div>
+        </button>
+    `;
+
+            // Payroll tab
+            const totalPayroll = payroll.reduce((sum, p) => sum + p.grossPay, 0);
+            const isPayrollActive = activeTab === 'payroll';
+
+            tabsHTML += `
+        <button onclick="switchTab('payroll')" 
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isPayrollActive ? 'active' : 'text-blue-700'}">
+            <div class="font-semibold">💼 Payroll</div>
+            <div class="text-sm opacity-75">$${totalPayroll.toFixed(2)}</div>
+        </button>
+    `;
+
+            tabHeaders.innerHTML = tabsHTML;
+
+            // Set default active tab
+            if (activeTab === 'companies') {
+                if (!activeCompanyId || !companiesWithWork.find(c => c.id === activeCompanyId)) {
+                    if (companiesWithWork.length > 0) {
+                        activeCompanyId = companiesWithWork[0].id;
+                    } else if (expenses.length > 0) {
+                        activeTab = 'expenses';
+                    } else if (insurance.length > 0) {
+                        activeTab = 'insurance';
+                    } else if (payroll.length > 0) {
+                        activeTab = 'payroll';
+                    }
+                }
+            }
+
+            // Render content
+            if (activeTab === 'companies' && activeCompanyId) {
+                renderCompanyContent();
+            } else if (activeTab === 'expenses') {
+                renderExpensesContent();
+            } else if (activeTab === 'insurance') {
+                renderInsuranceContent();
+            } else if (activeTab === 'payroll') {
+                renderPayrollContent();
+            }
+
+            // Render grand total
+            renderGrandTotal();
+        }
+
+        // Render grand total section
+        function renderGrandTotal() {
+            const totals = calculateGrandTotals();
+            const container = document.getElementById('grandTotalContent');
+
+            container.innerHTML = `
+        <div class="text-center">
+            <span class="block text-sm opacity-75">Work Income</span>
+            <span class="block text-2xl font-bold text-green-400">+$${totals.companyTotals.toFixed(2)}</span>
+        </div>
+        <div class="text-center">
+            <span class="block text-sm opacity-75">Total Expenses</span>
+            <span class="block text-2xl font-bold text-red-400">-$${totals.totalExpenses.toFixed(2)}</span>
+        </div>
+        <div class="text-center">
+            <span class="block text-sm opacity-75">Insurance</span>
+            <span class="block text-2xl font-bold text-red-400">-$${totals.totalInsurance.toFixed(2)}</span>
+        </div>
+        <div class="text-center">
+            <span class="block text-sm opacity-75">Payroll</span>
+            <span class="block text-2xl font-bold text-red-400">-$${totals.totalPayroll.toFixed(2)}</span>
+        </div>
+        <div class="text-center border-l-2 border-gray-600 pl-4">
+            <span class="block text-sm opacity-75">Net Total</span>
+            <span class="block text-3xl font-bold ${totals.grandTotal >= 0 ? 'text-green-400' : 'text-red-400'}">
+                ${totals.grandTotal >= 0 ? '+' : ''}$${totals.grandTotal.toFixed(2)}
+            </span>
+        </div>
+    `;
+        }
+
+        // Render company content with year grouping
+        function renderCompanyContent() {
+            const company = getCompany(activeCompanyId);
+            if (!company) return;
+
+            const records = workRecords.filter(r => r.companyId === company.id);
+            const totalPay = records.reduce((sum, r) => sum + (r.hours * r.rate), 0);
+
+            // Group by year
+            const recordsByYear = groupByYear(records, r => r.year);
+            const years = Object.keys(recordsByYear).sort((a, b) => b - a);
+
+            const tabKey = `company-${company.id}`;
+
+            let yearSectionsHTML = '';
+            years.forEach(year => {
+                const yearRecords = recordsByYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                const yearTotal = yearRecords.reduce((sum, r) => sum + (r.hours * r.rate), 0);
+                const isExpanded = isYearExpanded(tabKey, year);
+
+                yearSectionsHTML += `
+            <div class="year-section">
+                <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
+                    <div>
+                        <span class="font-semibold text-lg">${year}</span>
+                        <span class="ml-4 text-amber-600">${yearRecords.length} entries</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-green-700">$${yearTotal.toFixed(2)}</span>
+                        <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                    <table class="w-full border border-amber-200 rounded-lg">
+                        <thead class="bg-amber-100">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold text-amber-900 border-r border-amber-200">Month</th>
+                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Hours</th>
+                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Pay rate</th>
+                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Actual Pay</th>
+                                <th class="px-4 py-3 text-center font-semibold text-amber-900">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-amber-50">
+                            ${yearRecords.map(record => `
+                                <tr class="border-b border-amber-200">
+                                    <td class="px-4 py-3 font-medium text-amber-900 border-r border-amber-200">
+                                        ${getMonthName(record.month)}
+                                    </td>
+                                    <td class="px-4 py-3 border-r border-amber-200">
+                                        <input type="number" value="${record.hours}" step="0.5"
+                                               onchange="updateHours(${record.id}, this.value)"
+                                               class="w-full px-2 py-1 text-center border border-amber-300 rounded bg-white focus:ring-2 focus:ring-amber-500">
+                                    </td>
+                                    <td class="px-4 py-3 border-r border-amber-200">
+                                        <input type="number" value="${record.rate}" step="0.01"
+                                               onchange="updateRate(${record.id}, this.value)"
+                                               class="w-20 px-2 py-1 text-center border border-amber-300 rounded bg-white focus:ring-2 focus:ring-amber-500">
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-bold text-green-700 border-r border-amber-200">
+                                        $${(record.hours * record.rate).toFixed(2)}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <button onclick="deleteWorkEntry(${record.id})"
+                                                class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+            });
+
+            document.getElementById('tabContent').innerHTML = `
+        <div class="primary-bg text-white p-4 rounded-lg mb-6">
+            <h3 class="text-xl font-bold">${company.name}</h3>
+            <p class="text-amber-100">
+                Base Rate: $${company.baseRate.toFixed(2)}/hour
+                ${company.deductionPercent > 0 ? `| Deduction: ${company.deductionPercent}%` : ''}
+                | Actual Rate: $${company.payRate.toFixed(2)}/hour
+            </p>
+        </div>
+        ${yearSectionsHTML}
+        <div class="bg-gradient-to-r from-amber-100 to-amber-200 p-4 rounded-lg mt-4">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold text-amber-900">Total for ${company.name}:</span>
+                <span class="font-bold text-amber-900 text-lg">$${totalPay.toFixed(2)}</span>
+            </div>
+        </div>
+    `;
+        }
+
+        // Render expenses content with year grouping - UPDATED
+        function renderExpensesContent() {
+            const expensesByYear = groupByYear(expenses, e => new Date(e.date).getFullYear());
+            const years = Object.keys(expensesByYear).sort((a, b) => b - a);
+
+            const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            const tabKey = 'expenses';
+
+            let yearSectionsHTML = '';
+            if (expenses.length === 0) {
+                yearSectionsHTML = `
+            <div class="text-center py-8 text-purple-600">
+                <div class="text-6xl mb-4">💳</div>
+                <h3 class="text-xl font-semibold text-purple-700 mb-2">No Expenses Yet</h3>
+                <p class="text-purple-600">Use the form above to add your first expense!</p>
+            </div>
+        `;
+            } else {
+                years.forEach(year => {
+                    const yearExpenses = expensesByYear[year].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    const yearTotal = yearExpenses.reduce((sum, e) => sum + e.amount, 0);
+                    const isExpanded = isYearExpanded(tabKey, year);
+
+                    yearSectionsHTML += `
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
+                        <div>
+                            <span class="font-semibold text-lg">${year}</span>
+                            <span class="ml-4 text-purple-600">${yearExpenses.length} entries</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-purple-700">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                        <table class="w-full border border-purple-200 rounded-lg">
+                            <thead class="bg-purple-100">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-purple-900 border-r border-purple-200">Date</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-purple-900 border-r border-purple-200">Name</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-purple-900 border-r border-purple-200">Type</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-purple-900 border-r border-purple-200">Amount</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-purple-900">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-purple-50">
+                                ${yearExpenses.map(expense => `
+                                    <tr class="border-b border-purple-200">
+                                        <td class="px-4 py-3 font-medium text-purple-900 border-r border-purple-200">
+                                            ${new Date(expense.date).toLocaleDateString()}
+                                        </td>
+                                        <td class="px-4 py-3 text-purple-900 border-r border-purple-200">
+                                            ${expense.name}
+                                        </td>
+                                        <td class="px-4 py-3 text-center border-r border-purple-200">
+                                            <span class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                ${expense.type === 'expense' ? '💸 Business' : '💰 Other'}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center border-r border-purple-200">
+                                            <input type="number" value="${expense.amount}" step="0.01"
+                                                   onchange="updateExpenseAmount(${expense.id}, this.value)"
+                                                   class="w-24 px-2 py-1 text-center border border-purple-300 rounded bg-white focus:ring-2 focus:ring-purple-500">
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button onclick="deleteExpense(${expense.id})"
+                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = `
+        <div class="tertiary-bg text-white p-4 rounded-lg mb-6">
+            <h3 class="text-xl font-bold">💳 Expenses</h3>
+            <p class="text-purple-100">Track your business expenses (both types are added to total expenses)</p>
+        </div>
+        ${yearSectionsHTML}
+        ${expenses.length > 0 ? `
+            <div class="bg-gradient-to-r from-purple-100 to-purple-200 p-4 rounded-lg mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-purple-900">Total Expenses:</span>
+                    <div class="flex gap-6">
+                        <span class="font-bold text-purple-700">Entries: ${expenses.length}</span>
+                        <span class="font-bold text-purple-700">Total: $${totalExpenses.toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+    `;
+        }
+
+        // Render insurance content with year grouping
+        function renderInsuranceContent() {
+            const insuranceByYear = groupByYear(insurance, i => i.year);
+            const years = Object.keys(insuranceByYear).sort((a, b) => b - a);
+
+            const totalInsurance = insurance.reduce((sum, ins) => sum + ins.amount, 0);
+            const tabKey = 'insurance';
+
+            let yearSectionsHTML = '';
+            if (insurance.length === 0) {
+                yearSectionsHTML = `
+            <div class="text-center py-8 text-rose-600">
+                <div class="text-6xl mb-4">🛡️</div>
+                <h3 class="text-xl font-semibold text-rose-700 mb-2">No Insurance Payments Yet</h3>
+                <p class="text-rose-600">Use the form above to add your first insurance payment!</p>
+            </div>
+        `;
+            } else {
+                years.forEach(year => {
+                    const yearInsurance = insuranceByYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                    const yearTotal = yearInsurance.reduce((sum, i) => sum + i.amount, 0);
+                    const isExpanded = isYearExpanded(tabKey, year);
+
+                    yearSectionsHTML += `
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
+                        <div>
+                            <span class="font-semibold text-lg">${year}</span>
+                            <span class="ml-4 text-rose-600">${yearInsurance.length} payments</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-rose-700">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                        <table class="w-full border border-rose-200 rounded-lg">
+                            <thead class="bg-rose-100">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-rose-900 border-r border-rose-200">Month</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-rose-900 border-r border-rose-200">Amount</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-rose-900">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-rose-50">
+                                ${yearInsurance.map(ins => `
+                                    <tr class="border-b border-rose-200">
+                                        <td class="px-4 py-3 font-medium text-rose-900 border-r border-rose-200">
+                                            ${getMonthName(ins.month)}
+                                        </td>
+                                        <td class="px-4 py-3 text-center border-r border-rose-200">
+                                            <input type="number" value="${ins.amount}" step="0.01"
+                                                   onchange="updateInsuranceAmount(${ins.id}, this.value)"
+                                                   class="w-32 px-2 py-1 text-center border border-rose-300 rounded bg-white focus:ring-2 focus:ring-rose-500">
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button onclick="deleteInsurance(${ins.id})"
+                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = `
+        <div class="secondary-bg text-white p-4 rounded-lg mb-6">
+            <h3 class="text-xl font-bold">🛡️ Insurance Payments</h3>
+            <p class="text-rose-100">Track your monthly insurance payments</p>
+        </div>
+        ${yearSectionsHTML}
+        ${insurance.length > 0 ? `
+            <div class="bg-gradient-to-r from-rose-100 to-rose-200 p-4 rounded-lg mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-rose-900">Total Insurance Payments:</span>
+                    <div class="flex gap-6">
+                        <span class="font-bold text-rose-700">Entries: ${insurance.length}</span>
+                        <span class="font-bold text-rose-700">Total: $${totalInsurance.toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+    `;
+        }
+
+        // Render payroll content with year grouping
+        function renderPayrollContent() {
+            const payrollByYear = groupByYear(payroll, p => p.year);
+            const years = Object.keys(payrollByYear).sort((a, b) => b - a);
+
+            const totalPayroll = payroll.reduce((sum, p) => sum + p.grossPay, 0);
+            const tabKey = 'payroll';
+
+            let yearSectionsHTML = '';
+            if (payroll.length === 0) {
+                yearSectionsHTML = `
+            <div class="text-center py-8 text-blue-600">
+                <div class="text-6xl mb-4">💼</div>
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">No Payroll Entries Yet</h3>
+                <p class="text-blue-600">Use the form above to add your first payroll entry!</p>
+            </div>
+        `;
+            } else {
+                years.forEach(year => {
+                    const yearPayroll = payrollByYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                    const yearTotal = yearPayroll.reduce((sum, p) => sum + p.grossPay, 0);
+                    const isExpanded = isYearExpanded(tabKey, year);
+
+                    yearSectionsHTML += `
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
+                        <div>
+                            <span class="font-semibold text-lg">${year}</span>
+                            <span class="ml-4 text-blue-600">${yearPayroll.length} entries</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-emerald-700">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                        <table class="w-full border border-blue-200 rounded-lg">
+                            <thead class="bg-blue-100">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-blue-900 border-r border-blue-200">Month</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Salary Hours</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Effective Rate</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Gross Pay</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-blue-900">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-blue-50">
+                                ${yearPayroll.map(pr => `
+                                    <tr class="border-b border-blue-200">
+                                        <td class="px-4 py-3 font-medium text-blue-900 border-r border-blue-200">
+                                            ${getMonthName(pr.month)}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-blue-900 border-r border-blue-200">
+                                            ${pr.hours}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-blue-900 border-r border-blue-200">
+                                            $${pr.rate.toFixed(2)}
+                                        </td>
+                                        <td class="px-4 py-3 text-center border-r border-blue-200">
+                                            <input type="number" value="${pr.grossPay}" step="0.01"
+                                                   onchange="updatePayrollGross(${pr.id}, this.value)"
+                                                   class="w-28 px-2 py-1 text-center font-bold text-emerald-700 border border-blue-300 rounded bg-white focus:ring-2 focus:ring-blue-500">
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button onclick="deletePayroll(${pr.id})"
+                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = `
+        <div class="quinary-bg text-white p-4 rounded-lg mb-6">
+            <h3 class="text-xl font-bold">💼 Payroll Entries</h3>
+            <p class="text-blue-100">Track your monthly salary payments</p>
+        </div>
+        ${yearSectionsHTML}
+        ${payroll.length > 0 ? `
+            <div class="bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-lg mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-blue-900">Total Payroll:</span>
+                    <div class="flex gap-6">
+                        <span class="font-bold text-blue-700">Entries: ${payroll.length}</span>
+                        <span class="font-bold text-blue-700">Total: $${totalPayroll.toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+    `;
+        }
+
+        function renderAll() {
+            renderCompanies();
+            renderTabs();
+
+            // Show/hide forms based on active tab and data
+            const hasData = companies.length > 0;
+            document.getElementById('addEntrySection').style.display = hasData && activeTab === 'companies' ? 'block' : 'none';
+            document.getElementById('expensesForm').style.display = hasData && activeTab === 'expenses' ? 'block' : 'none';
+            document.getElementById('insuranceForm').style.display = hasData && activeTab === 'insurance' ? 'block' : 'none';
+            document.getElementById('payrollForm').style.display = hasData && activeTab === 'payroll' ? 'block' : 'none';
+        }
+
+        // Excel Export
+        function exportToExcel() {
+            try {
+                const wb = XLSX.utils.book_new();
+
+                // 1. Companies sheet
+                const companiesData = companies.map(c => ({
+                    'Company ID': c.id,
+                    'Company Name': c.name,
+                    'Base Hourly Rate': c.baseRate,
+                    'Deduction Percentage': c.deductionPercent,
+                    'Actual Hourly Rate': c.payRate
+                }));
+                const companiesWS = XLSX.utils.json_to_sheet(companiesData);
+                XLSX.utils.book_append_sheet(wb, companiesWS, "Companies");
+
+                // 2. Work Records sheets - one per company
+                companies.forEach(company => {
+                    const companyRecords = workRecords.filter(r => r.companyId === company.id);
+                    if (companyRecords.length > 0) {
+                        const recordsData = companyRecords.map(r => ({
+                            'Month': getMonthName(r.month),
+                            'Year': r.year,
+                            'Hours': r.hours,
+                            'Rate': r.rate,
+                            'Total Pay': r.hours * r.rate
+                        }));
+                        const recordsWS = XLSX.utils.json_to_sheet(recordsData);
+                        const sheetName = company.name.substring(0, 31);
+                        XLSX.utils.book_append_sheet(wb, recordsWS, sheetName);
+                    }
+                });
+
+                // 3. Expenses sheet
+                if (expenses.length > 0) {
+                    const expensesData = expenses.map(e => ({
+                        'Date': e.date,
+                        'Name': e.name,
+                        'Type': e.type === 'expense' ? 'Business Expense' : 'Other Expense',
+                        'Amount': e.amount
+                    }));
+                    const expensesWS = XLSX.utils.json_to_sheet(expensesData);
+                    XLSX.utils.book_append_sheet(wb, expensesWS, "Expenses");
+                }
+
+                // 4. Insurance sheet
+                if (insurance.length > 0) {
+                    const insuranceData = insurance.map(i => ({
+                        'Month': getMonthName(i.month),
+                        'Year': i.year,
+                        'Amount': i.amount
+                    }));
+                    const insuranceWS = XLSX.utils.json_to_sheet(insuranceData);
+                    XLSX.utils.book_append_sheet(wb, insuranceWS, "Insurance");
+                }
+
+                // 5. Payroll sheet
+                if (payroll.length > 0) {
+                    const payrollData = payroll.map(p => ({
+                        'Month': getMonthName(p.month),
+                        'Year': p.year,
+                        'Hours': p.hours,
+                        'Rate': p.rate,
+                        'Gross Pay': p.grossPay
+                    }));
+                    const payrollWS = XLSX.utils.json_to_sheet(payrollData);
+                    XLSX.utils.book_append_sheet(wb, payrollWS, "Payroll");
+                }
+
+                // 6. Summary sheet - UPDATED
+                const totals = calculateGrandTotals();
+                const summaryData = [
+                    { 'Category': 'Total Work Income', 'Amount': totals.companyTotals },
+                    { 'Category': 'Total Expenses', 'Amount': totals.totalExpenses },
+                    { 'Category': 'Insurance Payments', 'Amount': totals.totalInsurance },
+                    { 'Category': 'Payroll Total', 'Amount': totals.totalPayroll },
+                    { 'Category': '', 'Amount': '' },
+                    { 'Category': 'GRAND TOTAL', 'Amount': totals.grandTotal }
+                ];
+
+                companies.forEach(c => {
+                    const companyTotal = workRecords
+                        .filter(r => r.companyId === c.id)
+                        .reduce((sum, r) => sum + (r.hours * r.rate), 0);
+                    summaryData.push({
+                        'Category': `  - ${c.name}`,
+                        'Amount': companyTotal
+                    });
+                });
+
+                const summaryWS = XLSX.utils.json_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, summaryWS, "Summary");
+
+                // Generate Excel file
+                const fileName = 'work-tracker-' + new Date().toISOString().split('T')[0] + '.xlsx';
+                XLSX.writeFile(wb, fileName);
+
+                alert('Excel file exported successfully!');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Export failed. Check console for details.');
+            }
+        }
+
+        // Excel Import Function
+        function importFromExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    const confirmImport = confirm(
+                        'This will replace all current data with data from the Excel file.\n\n' +
+                        'Sheets found: ' + workbook.SheetNames.join(', ') + '\n\n' +
+                        'Continue?'
+                    );
+
+                    if (!confirmImport) {
+                        input.value = '';
+                        return;
+                    }
+
+                    // Clear existing data
+                    companies = [];
+                    workRecords = [];
+                    expenses = [];
+                    insurance = [];
+                    payroll = [];
+
+                    // 1. Import Companies
+                    if (workbook.SheetNames.includes('Companies')) {
+                        const companiesSheet = workbook.Sheets['Companies'];
+                        const companiesData = XLSX.utils.sheet_to_json(companiesSheet);
+
+                        companiesData.forEach(row => {
+                            companies.push({
+                                id: row['Company ID'] || Date.now() + Math.random(),
+                                name: row['Company Name'],
+                                baseRate: parseFloat(row['Base Hourly Rate']) || 0,
+                                deductionPercent: parseFloat(row['Deduction Percentage']) || 0,
+                                payRate: parseFloat(row['Actual Hourly Rate']) || 0
+                            });
+                        });
+                    }
+
+                    // 2. Import Work Records
+                    companies.forEach(company => {
+                        const sheetName = company.name.substring(0, 31);
+                        if (workbook.SheetNames.includes(sheetName)) {
+                            const sheet = workbook.Sheets[sheetName];
+                            const recordsData = XLSX.utils.sheet_to_json(sheet);
+
+                            recordsData.forEach(row => {
+                                const monthNum = getMonthNumber(row['Month']);
+                                if (monthNum) {
+                                    const monthKey = `${row['Year']}-${monthNum}`;
+                                    workRecords.push({
+                                        id: Date.now() + Math.random(),
+                                        companyId: company.id,
+                                        monthKey: monthKey,
+                                        month: monthNum,
+                                        year: parseInt(row['Year']),
+                                        hours: parseFloat(row['Hours']) || 0,
+                                        rate: parseFloat(row['Rate']) || company.payRate
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    // 3. Import Expenses
+                    if (workbook.SheetNames.includes('Expenses')) {
+                        const expensesSheet = workbook.Sheets['Expenses'];
+                        const expensesData = XLSX.utils.sheet_to_json(expensesSheet);
+
+                        expensesData.forEach(row => {
+                            expenses.push({
+                                id: Date.now() + Math.random(),
+                                date: formatExcelDate(row['Date']),
+                                name: row['Name'],
+                                type: row['Type'] === 'Other Expense' ? 'income' : 'expense',
+                                amount: parseFloat(row['Amount']) || 0
+                            });
+                        });
+                    }
+
+                    // 4. Import Insurance
+                    if (workbook.SheetNames.includes('Insurance')) {
+                        const insuranceSheet = workbook.Sheets['Insurance'];
+                        const insuranceData = XLSX.utils.sheet_to_json(insuranceSheet);
+
+                        insuranceData.forEach(row => {
+                            const monthNum = getMonthNumber(row['Month']);
+                            if (monthNum) {
+                                const monthKey = `${row['Year']}-${monthNum}`;
+                                insurance.push({
+                                    id: Date.now() + Math.random(),
+                                    monthKey: monthKey,
+                                    month: monthNum,
+                                    year: parseInt(row['Year']),
+                                    amount: parseFloat(row['Amount']) || 0
+                                });
+                            }
+                        });
+                    }
+
+                    // 5. Import Payroll
+                    if (workbook.SheetNames.includes('Payroll')) {
+                        const payrollSheet = workbook.Sheets['Payroll'];
+                        const payrollData = XLSX.utils.sheet_to_json(payrollSheet);
+
+                        payrollData.forEach(row => {
+                            const monthNum = getMonthNumber(row['Month']);
+                            if (monthNum) {
+                                const monthKey = `${row['Year']}-${monthNum}`;
+                                const grossPay = parseFloat(row['Gross Pay']) || 0;
+                                const hours = parseFloat(row['Hours']) || 0;
+                                const rate = parseFloat(row['Rate']) || (hours > 0 ? grossPay / hours : 0);
+
+                                payroll.push({
+                                    id: Date.now() + Math.random(),
+                                    monthKey: monthKey,
+                                    month: monthNum,
+                                    year: parseInt(row['Year']),
+                                    hours: hours,
+                                    rate: rate,
+                                    grossPay: grossPay
+                                });
+                            }
+                        });
+                    }
+
+                    // Reset active tab
+                    activeTab = 'companies';
+                    activeCompanyId = null;
+                    expandedYears = {};
+
+                    // Save to Firebase and render
+                    saveDataToFirebase().then(() => {
+                        renderAll();
+                        alert('Excel file imported successfully to cloud!');
+                    }).catch(error => {
+                        console.error('Import error:', error);
+                        alert('Import successful but failed to save to cloud. Please try again.');
+                    });
+
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Import failed. Please check the Excel file format.');
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+            input.value = '';
+        }
+
+        // Helper function to convert month name to number
+        function getMonthNumber(monthName) {
+            const months = {
+                'January': '01', 'February': '02', 'March': '03', 'April': '04',
+                'May': '05', 'June': '06', 'July': '07', 'August': '08',
+                'September': '09', 'October': '10', 'November': '11', 'December': '12'
+            };
+            return months[monthName] || null;
+        }
+
+        // Helper function to format Excel date
+        function formatExcelDate(excelDate) {
+            if (typeof excelDate === 'number') {
+                const date = new Date((excelDate - 25569) * 86400 * 1000);
+                return date.toISOString().split('T')[0];
+            } else if (typeof excelDate === 'string') {
+                const date = new Date(excelDate);
+                if (!isNaN(date)) {
+                    return date.toISOString().split('T')[0];
+                }
+            }
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Clear all data
+        async function clearAllData() {
+            if (confirm('Delete ALL data permanently?\n\nThis cannot be undone!')) {
+                companies = [];
+                workRecords = [];
+                expenses = [];
+                insurance = [];
+                payroll = [];
+                expandedYears = {};
+                activeTab = 'companies';
+                activeCompanyId = null;
+
+                await saveDataToFirebase();
+                renderAll();
+                alert('All data cleared.');
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set up Google sign-in button
+            document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+
+            // Add Enter key support for company form
+            ['companyName', 'companyRate', 'companyPercent'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') addCompany();
+                });
+            });
+
+            // Add Enter key support for work entry form
+            ['entryHours', 'entryRate'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('keypress', function (e) {
+                        if (e.key === 'Enter') addWorkEntry();
+                    });
+                }
+            });
+
+            // Add payroll input listeners for automatic calculation
+            const payrollRate = document.getElementById('payrollRate');
+            const payrollHours = document.getElementById('payrollHours');
+            const payrollGross = document.getElementById('payrollGross');
+
+            if (payrollRate) {
+                payrollRate.addEventListener('input', function () {
+                    const hours = parseFloat(payrollHours.value) || 0;
+                    const rate = parseFloat(this.value) || 0;
+                    if (hours > 0 && rate > 0) {
+                        payrollGross.value = (hours * rate).toFixed(2);
+                    }
+                });
+            }
+
+            if (payrollHours) {
+                payrollHours.addEventListener('input', function () {
+                    const hours = parseFloat(this.value) || 0;
+                    const rate = parseFloat(payrollRate.value) || 0;
+                    if (hours > 0 && rate > 0) {
+                        payrollGross.value = (hours * rate).toFixed(2);
+                    }
+                });
+            }
+
+            console.log('🚀 Firebase Work Tracker initialized successfully');
+        });
+    </script>
+</body>
+
+</html>
