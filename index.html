@@ -314,17 +314,17 @@
 
             <!-- Expenses Form -->
             <div id="expensesForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
-                <h2 class="text-xl font-semibold mb-4 text-purple-800">💳 Add Expense</h2>
+                <h2 class="text-xl font-semibold mb-4 text-purple-800">💳 Add Received</h2>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <input type="date" id="expenseDate"
                         class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    <input type="text" id="expenseName" placeholder="Expense name"
+                    <input type="text" id="expenseName" placeholder="Received name"
                         class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
                     <select id="expenseType"
                         class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
                         <option value="">Select Type</option>
-                        <option value="expense">💸 Business Expense</option>
-                        <option value="income">💰 Other Expense</option>
+                        <option value="expense">💸 Business Received</option>
+                        <option value="income">💰 Other Received</option>
                     </select>
                     <input type="number" id="expenseAmount" placeholder="Amount ($)" step="0.01"
                         class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
@@ -1076,7 +1076,7 @@
             tabsHTML += `
         <button onclick="switchTab('expenses')" 
                 class="tab-button px-6 py-4 text-left whitespace-nowrap ${isExpensesActive ? 'active' : 'text-purple-700'}">
-            <div class="font-semibold">💳 Expenses</div>
+            <div class="font-semibold">💳 Received</div>
             <div class="text-sm opacity-75">$${totalExpenses.toFixed(2)}</div>
         </button>
     `;
@@ -1148,7 +1148,7 @@
             <span class="block text-2xl font-bold text-green-400">+$${totals.companyTotals.toFixed(2)}</span>
         </div>
         <div class="text-center">
-            <span class="block text-sm opacity-75">Total Expenses</span>
+            <span class="block text-sm opacity-75">Total Received</span>
             <span class="block text-2xl font-bold text-red-400">-$${totals.totalExpenses.toFixed(2)}</span>
         </div>
         <div class="text-center">
@@ -1278,7 +1278,7 @@
                 yearSectionsHTML = `
             <div class="text-center py-8 text-purple-600">
                 <div class="text-6xl mb-4">💳</div>
-                <h3 class="text-xl font-semibold text-purple-700 mb-2">No Expenses Yet</h3>
+                <h3 class="text-xl font-semibold text-purple-700 mb-2">No Received Yet</h3>
                 <p class="text-purple-600">Use the form above to add your first expense!</p>
             </div>
         `;
@@ -1348,14 +1348,14 @@
 
             document.getElementById('tabContent').innerHTML = `
         <div class="tertiary-bg text-white p-4 rounded-lg mb-6">
-            <h3 class="text-xl font-bold">💳 Expenses</h3>
+            <h3 class="text-xl font-bold">💳 Received</h3>
             <p class="text-purple-100">Track your business expenses (both types are added to total expenses)</p>
         </div>
         ${yearSectionsHTML}
         ${expenses.length > 0 ? `
             <div class="bg-gradient-to-r from-purple-100 to-purple-200 p-4 rounded-lg mt-4">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-purple-900">Total Expenses:</span>
+                    <span class="font-semibold text-purple-900">Total Received:</span>
                     <div class="flex gap-6">
                         <span class="font-bold text-purple-700">Entries: ${expenses.length}</span>
                         <span class="font-bold text-purple-700">Total: $${totalExpenses.toFixed(2)}</span>
