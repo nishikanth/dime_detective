@@ -16,32 +16,36 @@
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #fdf6e3 0%, #f5e6d3 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             min-height: 100vh;
+            color: #e2e8f0;
         }
 
         .tab-button {
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .tab-button.active {
-            border-bottom: 3px solid #d97706;
-            background: #fed7aa;
-            color: #92400e;
+            border-bottom: 3px solid #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
 
         .tab-button:not(.active):hover {
-            background: #fef3c7;
-            color: #78350f;
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            transform: translateY(-1px);
         }
 
-        /* Custom color scheme - warm tones */
+        /* Modern gradient color scheme */
         .primary-bg {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
         .secondary-bg {
-            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
 
         .tertiary-bg {
@@ -56,30 +60,57 @@
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
 
-        /* Collapsible sections */
+        /* Glass morphism effects */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+        }
+
+        .glass-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Year sections with modern styling */
         .year-section {
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
             margin-bottom: 1rem;
             overflow: hidden;
         }
 
         .year-header {
             cursor: pointer;
-            padding: 1rem;
-            background: #f9fafb;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
         }
 
         .year-header:hover {
-            background: #f3f4f6;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .year-content {
-            padding: 0 1rem 1rem 1rem;
+            padding: 0 1.5rem 1.5rem 1.5rem;
             display: none;
         }
 
@@ -88,30 +119,55 @@
         }
 
         .chevron {
-            transition: transform 0.2s;
+            transition: transform 0.3s ease;
         }
 
         .chevron.expanded {
             transform: rotate(180deg);
         }
 
-        /* Grand total section */
-        .grand-total-section {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin-top: 2rem;
+        /* Modern table styling */
+        .modern-table {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
         }
 
-        /* Auth styles */
+        .modern-table thead {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(29, 78, 216, 0.2) 100%);
+        }
+
+        .modern-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        .modern-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Grand total section */
+        .grand-total-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-top: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Auth styles with modern look */
         .auth-container {
             max-width: 400px;
             margin: 50px auto;
             padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .google-btn {
@@ -121,73 +177,98 @@
             gap: 12px;
             width: 100%;
             padding: 12px 24px;
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
             font-weight: 500;
-            color: #374151;
-            transition: all 0.2s;
+            color: #1e293b;
+            transition: all 0.3s ease;
             cursor: pointer;
+            backdrop-filter: blur(10px);
         }
 
         .google-btn:hover {
-            border-color: #d1d5db;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .google-btn:active {
-            transform: translateY(1px);
+            background: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #f59e0b;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .hidden {
             display: none !important;
         }
 
+        /* Modern user info styling */
         .user-info {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 25px;
+            color: #e2e8f0;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
         }
 
         .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Modern button styles */
+        .modern-btn {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Connection indicator */
+        .connection-indicator {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 6px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Loading screen */
+        .loading-screen {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
         }
     </style>
 </head>
 
 <body>
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="fixed inset-0 bg-amber-50 flex items-center justify-center z-50">
+    <div id="loadingScreen" class="loading-screen fixed inset-0 flex items-center justify-center z-50">
         <div class="text-center">
             <div class="loading mb-4"></div>
-            <p class="text-amber-700">Loading your data...</p>
+            <p class="text-blue-400">Loading your data...</p>
         </div>
     </div>
 
@@ -195,30 +276,25 @@
     <div id="authScreen" class="hidden">
         <div class="auth-container">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-amber-900 mb-2">💰 Work Tracker</h1>
-                <p class="text-amber-700 mb-6">Sign in to access your financial data anywhere</p>
+                <h1 class="text-3xl font-bold text-white mb-2">💰 Work Tracker</h1>
+                <p class="text-slate-300 mb-6">Sign in to access your financial data anywhere</p>
 
                 <button id="googleSignInBtn" class="google-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24">
-                        <path fill="#4285f4"
-                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#34a853"
-                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#fbbc05"
-                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                        <path fill="#ea4335"
-                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     Continue with Google
                 </button>
 
-                <p class="text-xs text-amber-600 mt-4">
+                <p class="text-xs text-slate-400 mt-4">
                     Your data is securely stored and only accessible by you
                 </p>
             </div>
 
-            <div id="authError"
-                class="hidden mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm"></div>
+            <div id="authError" class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm"></div>
         </div>
     </div>
 
@@ -229,20 +305,20 @@
             <div class="text-center mb-8">
                 <div class="flex justify-between items-center mb-4">
                     <div></div>
-                    <h1 class="text-3xl font-bold text-amber-900">💰 Work Hours & Earnings Tracker</h1>
+                    <h1 class="text-3xl font-bold text-white">💰 Work Hours & Earnings Tracker</h1>
                     <div class="user-info">
                         <img id="userAvatar" class="user-avatar" src="" alt="User">
                         <div class="text-right">
                             <div class="text-sm font-medium text-white" id="userName"></div>
-                            <button onclick="signOut()" class="text-xs text-amber-200 hover:text-white">
+                            <button onclick="signOut()" class="text-xs text-blue-300 hover:text-white transition-colors">
                                 Sign Out
                             </button>
                         </div>
                     </div>
                 </div>
-                <p class="text-amber-700">Track work, expenses, insurance, and payroll - complete financial overview</p>
-                <div class="text-center mt-2">
-                    <span class="inline-flex items-center gap-2 text-sm text-green-600">
+                <p class="text-slate-300">Track work, expenses, insurance, and payroll - complete financial overview</p>
+                <div class="text-center mt-3">
+                    <span class="connection-indicator inline-flex items-center gap-2 text-sm">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         Connected to Cloud
                     </span>
@@ -250,19 +326,15 @@
             </div>
 
             <!-- Companies Management -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4 text-amber-800">🏢 Companies & Rates</h2>
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-white">🏢 Companies & Rates</h2>
 
                 <!-- Add Company Form -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-                    <input type="text" id="companyName" placeholder="Company name"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                    <input type="number" id="companyRate" placeholder="Hourly rate ($)" step="0.01"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                    <input type="number" id="companyPercent" placeholder="Deduction %" step="0.01" min="0" max="100"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                    <button onclick="addCompany()"
-                        class="px-6 py-2 primary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <input type="text" id="companyName" placeholder="Company name" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="companyRate" placeholder="Hourly rate ($)" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="companyPercent" placeholder="Deduction %" step="0.01" min="0" max="100" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <button onclick="addCompany()" class="primary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-6 py-2">
                         + Add
                     </button>
                 </div>
@@ -270,15 +342,13 @@
             </div>
 
             <!-- Add Work Entry Form -->
-            <div id="addEntrySection" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
-                <h2 class="text-xl font-semibold mb-4 text-amber-800">➕ Add Work Entry</h2>
+            <div id="addEntrySection" class="glass-card rounded-xl p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-white">➕ Add Work Entry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <select id="entryCompany"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <select id="entryCompany" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Company</option>
                     </select>
-                    <select id="entryMonth"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <select id="entryMonth" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Month</option>
                         <option value="01">January</option>
                         <option value="02">February</option>
@@ -293,54 +363,44 @@
                         <option value="11">November</option>
                         <option value="12">December</option>
                     </select>
-                    <select id="entryYear"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <select id="entryYear" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="2023">2023</option>
                         <option value="2024">2024</option>
                         <option value="2025" selected>2025</option>
                         <option value="2026">2026</option>
                     </select>
-                    <input type="number" id="entryHours" placeholder="Hours" step="0.5"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
-                    <input type="number" id="entryRate" placeholder="Rate/hr" step="0.01"
-                        class="px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
-                    <button onclick="addWorkEntry()"
-                        class="px-4 py-2 quaternary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <input type="number" id="entryHours" placeholder="Hours" step="0.5" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="entryRate" placeholder="Rate/hr" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button onclick="addWorkEntry()" class="quaternary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-4 py-2">
                         + Add Entry
                     </button>
                 </div>
-                <p class="text-sm text-amber-600 mt-2">💡 Rate is pre-filled from company settings but can be adjusted per entry</p>
+                <p class="text-sm text-slate-400 mt-2">💡 Rate is pre-filled from company settings but can be adjusted per entry</p>
             </div>
 
             <!-- Expenses Form -->
-            <div id="expensesForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
-                <h2 class="text-xl font-semibold mb-4 text-purple-800">💳 Add Received</h2>
+            <div id="expensesForm" class="glass-card rounded-xl p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-white">💳 Add Received</h2>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <input type="date" id="expenseDate"
-                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    <input type="text" id="expenseName" placeholder="Received name"
-                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    <select id="expenseType"
-                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <input type="date" id="expenseDate" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="expenseName" placeholder="Received name" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <select id="expenseType" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500">
                         <option value="">Select Type</option>
                         <option value="expense">💸 Business Received</option>
                         <option value="income">💰 Other Received</option>
                     </select>
-                    <input type="number" id="expenseAmount" placeholder="Amount ($)" step="0.01"
-                        class="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    <button onclick="addExpense()"
-                        class="px-4 py-2 tertiary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <input type="number" id="expenseAmount" placeholder="Amount ($)" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <button onclick="addExpense()" class="tertiary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-4 py-2">
                         + Add Entry
                     </button>
                 </div>
             </div>
 
             <!-- Insurance Form -->
-            <div id="insuranceForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
-                <h2 class="text-xl font-semibold mb-4 text-rose-800">🛡️ Add Insurance Payment</h2>
+            <div id="insuranceForm" class="glass-card rounded-xl p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-white">🛡️ Add Insurance Payment</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <select id="insuranceMonth"
-                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
+                    <select id="insuranceMonth" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-red-500">
                         <option value="">Select Month</option>
                         <option value="01">January</option>
                         <option value="02">February</option>
@@ -355,29 +415,25 @@
                         <option value="11">November</option>
                         <option value="12">December</option>
                     </select>
-                    <select id="insuranceYear"
-                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
+                    <select id="insuranceYear" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-red-500">
                         <option value="2022">2022</option>
                         <option value="2023">2023</option>
                         <option value="2024">2024</option>
                         <option value="2025" selected>2025</option>
                         <option value="2026">2026</option>
                     </select>
-                    <input type="number" id="insuranceAmount" placeholder="Amount ($)" step="0.01"
-                        class="px-4 py-2 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500">
-                    <button onclick="addInsurance()"
-                        class="px-4 py-2 secondary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <input type="number" id="insuranceAmount" placeholder="Amount ($)" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-red-500">
+                    <button onclick="addInsurance()" class="secondary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-4 py-2">
                         + Add Payment
                     </button>
                 </div>
             </div>
 
             <!-- Payroll Form -->
-            <div id="payrollForm" class="bg-white rounded-xl shadow-lg p-6 mb-6" style="display: none;">
-                <h2 class="text-xl font-semibold mb-4 text-blue-800">💼 Add Payroll Entry</h2>
+            <div id="payrollForm" class="glass-card rounded-xl p-6 mb-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-white">💼 Add Payroll Entry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <select id="payrollMonth"
-                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="payrollMonth" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Month</option>
                         <option value="01">January</option>
                         <option value="02">February</option>
@@ -392,31 +448,26 @@
                         <option value="11">November</option>
                         <option value="12">December</option>
                     </select>
-                    <select id="payrollYear"
-                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="payrollYear" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="2022">2022</option>
                         <option value="2023">2023</option>
                         <option value="2024">2024</option>
                         <option value="2025" selected>2025</option>
                         <option value="2026">2026</option>
                     </select>
-                    <input type="number" id="payrollHours" placeholder="Salary Hours" step="0.5"
-                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <input type="number" id="payrollRate" placeholder="Rate (optional)" step="0.01"
-                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <input type="number" id="payrollGross" placeholder="Gross Pay" step="0.01"
-                        class="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <button onclick="addPayroll()"
-                        class="px-4 py-2 quinary-bg text-white rounded-lg hover:opacity-90 transition-opacity col-span-full md:col-span-1">
+                    <input type="number" id="payrollHours" placeholder="Salary Hours" step="0.5" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="payrollRate" placeholder="Rate (optional)" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="payrollGross" placeholder="Gross Pay" step="0.01" class="glass-input px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button onclick="addPayroll()" class="quinary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all col-span-full md:col-span-1 px-4 py-2">
                         + Add Entry
                     </button>
                 </div>
-                <p class="text-sm text-blue-600 mt-2">💡 Enter Hours + Rate OR Hours + Gross Pay</p>
+                <p class="text-sm text-slate-400 mt-2">💡 Enter Hours + Rate OR Hours + Gross Pay</p>
             </div>
 
             <!-- Tabbed Interface -->
-            <div id="tabbedContainer" class="bg-white rounded-xl shadow-lg overflow-hidden" style="display: none;">
-                <div class="border-b border-gray-200">
+            <div id="tabbedContainer" class="glass-card rounded-xl overflow-hidden" style="display: none;">
+                <div class="border-b border-white/10">
                     <div class="flex overflow-x-auto" id="tabHeaders"></div>
                 </div>
                 <div id="tabContent" class="p-6"></div>
@@ -429,27 +480,24 @@
             </div>
 
             <!-- Empty State -->
-            <div id="emptyState" class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div id="emptyState" class="glass-card rounded-xl p-8 text-center">
                 <div class="text-6xl mb-4">🏢</div>
-                <h3 class="text-xl font-semibold text-amber-700 mb-2">No Companies Added</h3>
-                <p class="text-amber-600">Add your first company above to start tracking!</p>
+                <h3 class="text-xl font-semibold text-white mb-2">No Companies Added</h3>
+                <p class="text-slate-400">Add your first company above to start tracking!</p>
             </div>
 
             <!-- Export/Import -->
             <div class="mt-6 text-center">
-                <p class="text-sm text-amber-600 mb-4">☁️ Data automatically synced to cloud</p>
+                <p class="text-sm text-slate-400 mb-4">☁️ Data automatically synced to cloud</p>
                 <div class="flex justify-center gap-4">
-                    <button onclick="exportToExcel()"
-                        class="px-4 py-2 primary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <button onclick="exportToExcel()" class="primary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-4 py-2">
                         📥 Export to Excel
                     </button>
-                    <label
-                        class="px-4 py-2 quaternary-bg text-white rounded-lg hover:opacity-90 transition-opacity cursor-pointer">
+                    <label class="quaternary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all cursor-pointer px-4 py-2">
                         📤 Import from Excel
                         <input type="file" accept=".xlsx,.xls" onchange="importFromExcel(this)" style="display: none;">
                     </label>
-                    <button onclick="clearAllData()"
-                        class="px-4 py-2 secondary-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                    <button onclick="clearAllData()" class="secondary-bg modern-btn text-white rounded-lg hover:opacity-90 transition-all px-4 py-2">
                         🗑️ Clear All
                     </button>
                 </div>
@@ -983,7 +1031,7 @@
             const container = document.getElementById('companiesList');
 
             if (companies.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-amber-600">No companies added yet.</div>';
+                container.innerHTML = '<div class="text-center py-8 text-slate-400">No companies added yet.</div>';
                 document.getElementById('addEntrySection').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tabbedContainer').style.display = 'none';
@@ -995,20 +1043,20 @@
                 document.getElementById('emptyState').style.display = 'none';
 
                 container.innerHTML = companies.map(company => `
-            <div class="flex items-center justify-between p-4 border border-amber-200 rounded-lg bg-amber-50">
+            <div class="flex items-center justify-between p-4 glass-card rounded-lg">
                 <div>
-                    <h3 class="font-semibold text-amber-900">${company.name}</h3>
-                    <p class="text-sm text-amber-700">
+                    <h3 class="font-semibold text-white">${company.name}</h3>
+                    <p class="text-sm text-slate-300">
                         Base: $${company.baseRate.toFixed(2)}/hr 
                         ${company.deductionPercent > 0 ? `(-${company.deductionPercent}%)` : ''} 
-                        = <strong>$${company.payRate.toFixed(2)}/hr</strong>
+                        = <strong class="text-blue-400">$${company.payRate.toFixed(2)}/hr</strong>
                     </p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="editCompany(${company.id})" 
-                            class="px-3 py-1 text-amber-700 hover:bg-amber-100 rounded">Edit</button>
+                            class="px-3 py-1 text-blue-400 hover:bg-blue-500/20 rounded transition-colors">Edit</button>
                     <button onclick="deleteCompany(${company.id})" 
-                            class="px-3 py-1 text-rose-700 hover:bg-rose-100 rounded">Delete</button>
+                            class="px-3 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors">Delete</button>
                 </div>
             </div>
         `).join('');
@@ -1063,20 +1111,20 @@
 
                 tabsHTML += `
             <button onclick="switchTab('companies', ${company.id})" 
-                    class="tab-button px-6 py-4 text-left whitespace-nowrap ${isActive ? 'active' : 'text-amber-700'}">
+                    class="tab-button px-6 py-4 text-left whitespace-nowrap ${isActive ? 'active' : 'text-slate-300 hover:text-blue-400'}">
                 <div class="font-semibold">${company.name}</div>
                 <div class="text-sm opacity-75">$${totalPay.toFixed(2)}</div>
             </button>
         `;
             });
 
-            // Expenses tab - UPDATED to show total expenses
+            // Expenses tab
             const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
             const isExpensesActive = activeTab === 'expenses';
 
             tabsHTML += `
         <button onclick="switchTab('expenses')" 
-                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isExpensesActive ? 'active' : 'text-purple-700'}">
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isExpensesActive ? 'active' : 'text-slate-300 hover:text-purple-400'}">
             <div class="font-semibold">💳 Received</div>
             <div class="text-sm opacity-75">$${totalExpenses.toFixed(2)}</div>
         </button>
@@ -1088,7 +1136,7 @@
 
             tabsHTML += `
         <button onclick="switchTab('insurance')" 
-                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isInsuranceActive ? 'active' : 'text-rose-700'}">
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isInsuranceActive ? 'active' : 'text-slate-300 hover:text-red-400'}">
             <div class="font-semibold">🛡️ Insurance</div>
             <div class="text-sm opacity-75">$${totalInsurance.toFixed(2)}</div>
         </button>
@@ -1100,7 +1148,7 @@
 
             tabsHTML += `
         <button onclick="switchTab('payroll')" 
-                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isPayrollActive ? 'active' : 'text-blue-700'}">
+                class="tab-button px-6 py-4 text-left whitespace-nowrap ${isPayrollActive ? 'active' : 'text-slate-300 hover:text-blue-400'}">
             <div class="font-semibold">💼 Payroll</div>
             <div class="text-sm opacity-75">$${totalPayroll.toFixed(2)}</div>
         </button>
@@ -1145,23 +1193,23 @@
 
             container.innerHTML = `
         <div class="text-center">
-            <span class="block text-sm opacity-75">Work Income</span>
+            <span class="block text-sm opacity-75 text-slate-300">Work Income</span>
             <span class="block text-2xl font-bold text-green-400">+$${totals.companyTotals.toFixed(2)}</span>
         </div>
         <div class="text-center">
-            <span class="block text-sm opacity-75">Total Received</span>
+            <span class="block text-sm opacity-75 text-slate-300">Total Received</span>
             <span class="block text-2xl font-bold text-red-400">-$${totals.totalExpenses.toFixed(2)}</span>
         </div>
         <div class="text-center">
-            <span class="block text-sm opacity-75">Insurance</span>
+            <span class="block text-sm opacity-75 text-slate-300">Insurance</span>
             <span class="block text-2xl font-bold text-red-400">-$${totals.totalInsurance.toFixed(2)}</span>
         </div>
         <div class="text-center">
-            <span class="block text-sm opacity-75">Payroll</span>
+            <span class="block text-sm opacity-75 text-slate-300">Payroll</span>
             <span class="block text-2xl font-bold text-red-400">-$${totals.totalPayroll.toFixed(2)}</span>
         </div>
-        <div class="text-center border-l-2 border-gray-600 pl-4">
-            <span class="block text-sm opacity-75">Net Total</span>
+        <div class="text-center border-l-2 border-slate-600 pl-4">
+            <span class="block text-sm opacity-75 text-slate-300">Net Total</span>
             <span class="block text-3xl font-bold ${totals.grandTotal >= 0 ? 'text-green-400' : 'text-red-400'}">
                 ${totals.grandTotal >= 0 ? '+' : ''}$${totals.grandTotal.toFixed(2)}
             </span>
@@ -1193,49 +1241,49 @@
             <div class="year-section">
                 <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
                     <div>
-                        <span class="font-semibold text-lg">${year}</span>
-                        <span class="ml-4 text-amber-600">${yearRecords.length} entries</span>
+                        <span class="font-semibold text-lg text-white">${year}</span>
+                        <span class="ml-4 text-blue-400">${yearRecords.length} entries</span>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="font-bold text-green-700">$${yearTotal.toFixed(2)}</span>
-                        <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span class="font-bold text-green-400">$${yearTotal.toFixed(2)}</span>
+                        <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </div>
                 </div>
                 <div class="year-content ${isExpanded ? 'expanded' : ''}">
-                    <table class="w-full border border-amber-200 rounded-lg">
-                        <thead class="bg-amber-100">
+                    <table class="modern-table w-full">
+                        <thead>
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-amber-900 border-r border-amber-200">Month</th>
-                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Hours</th>
-                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Pay rate</th>
-                                <th class="px-4 py-3 text-center font-semibold text-amber-900 border-r border-amber-200">Actual Pay</th>
-                                <th class="px-4 py-3 text-center font-semibold text-amber-900">Action</th>
+                                <th class="px-4 py-3 text-left font-semibold text-white border-r border-white/10">Month</th>
+                                <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Hours</th>
+                                <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Pay rate</th>
+                                <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Actual Pay</th>
+                                <th class="px-4 py-3 text-center font-semibold text-white">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-amber-50">
+                        <tbody>
                             ${yearRecords.map(record => `
-                                <tr class="border-b border-amber-200">
-                                    <td class="px-4 py-3 font-medium text-amber-900 border-r border-amber-200">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-white border-r border-white/5">
                                         ${getMonthName(record.month)}
                                     </td>
-                                    <td class="px-4 py-3 border-r border-amber-200">
+                                    <td class="px-4 py-3 border-r border-white/5">
                                         <input type="number" value="${record.hours}" step="0.5"
                                                onchange="updateHours(${record.id}, this.value)"
-                                               class="w-full px-2 py-1 text-center border border-amber-300 rounded bg-white focus:ring-2 focus:ring-amber-500">
+                                               class="glass-input w-full px-2 py-1 text-center rounded focus:ring-2 focus:ring-blue-500">
                                     </td>
-                                    <td class="px-4 py-3 border-r border-amber-200">
+                                    <td class="px-4 py-3 border-r border-white/5">
                                         <input type="number" value="${record.rate}" step="0.01"
                                                onchange="updateRate(${record.id}, this.value)"
-                                               class="w-20 px-2 py-1 text-center border border-amber-300 rounded bg-white focus:ring-2 focus:ring-amber-500">
+                                               class="glass-input w-20 px-2 py-1 text-center rounded focus:ring-2 focus:ring-blue-500">
                                     </td>
-                                    <td class="px-4 py-3 text-center font-bold text-green-700 border-r border-amber-200">
+                                    <td class="px-4 py-3 text-center font-bold text-green-400 border-r border-white/5">
                                         $${(record.hours * record.rate).toFixed(2)}
                                     </td>
                                     <td class="px-4 py-3 text-center">
                                         <button onclick="deleteWorkEntry(${record.id})"
-                                                class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                                class="px-2 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors">🗑️</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1247,25 +1295,25 @@
             });
 
             document.getElementById('tabContent').innerHTML = `
-        <div class="primary-bg text-white p-4 rounded-lg mb-6">
+        <div class="primary-bg text-white p-6 rounded-lg mb-6">
             <h3 class="text-xl font-bold">${company.name}</h3>
-            <p class="text-amber-100">
+            <p class="text-orange-100">
                 Base Rate: $${company.baseRate.toFixed(2)}/hour
                 ${company.deductionPercent > 0 ? `| Deduction: ${company.deductionPercent}%` : ''}
                 | Actual Rate: $${company.payRate.toFixed(2)}/hour
             </p>
         </div>
         ${yearSectionsHTML}
-        <div class="bg-gradient-to-r from-amber-100 to-amber-200 p-4 rounded-lg mt-4">
+        <div class="glass-card p-4 rounded-lg mt-4">
             <div class="flex justify-between items-center">
-                <span class="font-semibold text-amber-900">Total for ${company.name}:</span>
-                <span class="font-bold text-amber-900 text-lg">$${totalPay.toFixed(2)}</span>
+                <span class="font-semibold text-white">Total for ${company.name}:</span>
+                <span class="font-bold text-green-400 text-lg">$${totalPay.toFixed(2)}</span>
             </div>
         </div>
     `;
         }
 
-        // Render expenses content with year grouping - UPDATED
+        // Render expenses content with year grouping
         function renderExpensesContent() {
             const expensesByYear = groupByYear(expenses, e => new Date(e.date).getFullYear());
             const years = Object.keys(expensesByYear).sort((a, b) => b - a);
@@ -1277,10 +1325,10 @@
             let yearSectionsHTML = '';
             if (expenses.length === 0) {
                 yearSectionsHTML = `
-            <div class="text-center py-8 text-purple-600">
+            <div class="text-center py-8 text-slate-400">
                 <div class="text-6xl mb-4">💳</div>
-                <h3 class="text-xl font-semibold text-purple-700 mb-2">No Received Yet</h3>
-                <p class="text-purple-600">Use the form above to add your first expense!</p>
+                <h3 class="text-xl font-semibold text-white mb-2">No Received Yet</h3>
+                <p class="text-slate-400">Use the form above to add your first expense!</p>
             </div>
         `;
             } else {
@@ -1293,49 +1341,49 @@
                 <div class="year-section">
                     <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
                         <div>
-                            <span class="font-semibold text-lg">${year}</span>
-                            <span class="ml-4 text-purple-600">${yearExpenses.length} entries</span>
+                            <span class="font-semibold text-lg text-white">${year}</span>
+                            <span class="ml-4 text-purple-400">${yearExpenses.length} entries</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-bold text-purple-700">$${yearTotal.toFixed(2)}</span>
-                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span class="font-bold text-purple-400">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="year-content ${isExpanded ? 'expanded' : ''}">
-                        <table class="w-full border border-purple-200 rounded-lg">
-                            <thead class="bg-purple-100">
+                        <table class="modern-table w-full">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-purple-900 border-r border-purple-200">Date</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-purple-900 border-r border-purple-200">Name</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-purple-900 border-r border-purple-200">Type</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-purple-900 border-r border-purple-200">Amount</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-purple-900">Action</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white border-r border-white/10">Date</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white border-r border-white/10">Name</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Type</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Amount</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-purple-50">
+                            <tbody>
                                 ${yearExpenses.map(expense => `
-                                    <tr class="border-b border-purple-200">
-                                        <td class="px-4 py-3 font-medium text-purple-900 border-r border-purple-200">
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-white border-r border-white/5">
                                             ${new Date(expense.date).toLocaleDateString()}
                                         </td>
-                                        <td class="px-4 py-3 text-purple-900 border-r border-purple-200">
+                                        <td class="px-4 py-3 text-white border-r border-white/5">
                                             ${expense.name}
                                         </td>
-                                        <td class="px-4 py-3 text-center border-r border-purple-200">
-                                            <span class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                        <td class="px-4 py-3 text-center border-r border-white/5">
+                                            <span class="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
                                                 ${expense.type === 'expense' ? '💸 Business' : '💰 Other'}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3 text-center border-r border-purple-200">
+                                        <td class="px-4 py-3 text-center border-r border-white/5">
                                             <input type="number" value="${expense.amount}" step="0.01"
                                                    onchange="updateExpenseAmount(${expense.id}, this.value)"
-                                                   class="w-24 px-2 py-1 text-center border border-purple-300 rounded bg-white focus:ring-2 focus:ring-purple-500">
+                                                   class="glass-input w-24 px-2 py-1 text-center rounded focus:ring-2 focus:ring-purple-500">
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <button onclick="deleteExpense(${expense.id})"
-                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                                    class="px-2 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors">🗑️</button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -1348,18 +1396,18 @@
             }
 
             document.getElementById('tabContent').innerHTML = `
-        <div class="tertiary-bg text-white p-4 rounded-lg mb-6">
+        <div class="tertiary-bg text-white p-6 rounded-lg mb-6">
             <h3 class="text-xl font-bold">💳 Received</h3>
             <p class="text-purple-100">Track your business expenses (both types are added to total expenses)</p>
         </div>
         ${yearSectionsHTML}
         ${expenses.length > 0 ? `
-            <div class="bg-gradient-to-r from-purple-100 to-purple-200 p-4 rounded-lg mt-4">
+            <div class="glass-card p-4 rounded-lg mt-4">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-purple-900">Total Received:</span>
+                    <span class="font-semibold text-white">Total Received:</span>
                     <div class="flex gap-6">
-                        <span class="font-bold text-purple-700">Entries: ${expenses.length}</span>
-                        <span class="font-bold text-purple-700">Total: $${totalExpenses.toFixed(2)}</span>
+                        <span class="font-bold text-purple-400">Entries: ${expenses.length}</span>
+                        <span class="font-bold text-purple-400">Total: $${totalExpenses.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -1378,10 +1426,10 @@
             let yearSectionsHTML = '';
             if (insurance.length === 0) {
                 yearSectionsHTML = `
-            <div class="text-center py-8 text-rose-600">
+            <div class="text-center py-8 text-slate-400">
                 <div class="text-6xl mb-4">🛡️</div>
-                <h3 class="text-xl font-semibold text-rose-700 mb-2">No Insurance Payments Yet</h3>
-                <p class="text-rose-600">Use the form above to add your first insurance payment!</p>
+                <h3 class="text-xl font-semibold text-white mb-2">No Insurance Payments Yet</h3>
+                <p class="text-slate-400">Use the form above to add your first insurance payment!</p>
             </div>
         `;
             } else {
@@ -1394,39 +1442,39 @@
                 <div class="year-section">
                     <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
                         <div>
-                            <span class="font-semibold text-lg">${year}</span>
-                            <span class="ml-4 text-rose-600">${yearInsurance.length} payments</span>
+                            <span class="font-semibold text-lg text-white">${year}</span>
+                            <span class="ml-4 text-red-400">${yearInsurance.length} payments</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-bold text-rose-700">$${yearTotal.toFixed(2)}</span>
-                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span class="font-bold text-red-400">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="year-content ${isExpanded ? 'expanded' : ''}">
-                        <table class="w-full border border-rose-200 rounded-lg">
-                            <thead class="bg-rose-100">
+                        <table class="modern-table w-full">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-rose-900 border-r border-rose-200">Month</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-rose-900 border-r border-rose-200">Amount</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-rose-900">Action</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white border-r border-white/10">Month</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Amount</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-rose-50">
+                            <tbody>
                                 ${yearInsurance.map(ins => `
-                                    <tr class="border-b border-rose-200">
-                                        <td class="px-4 py-3 font-medium text-rose-900 border-r border-rose-200">
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-white border-r border-white/5">
                                             ${getMonthName(ins.month)}
                                         </td>
-                                        <td class="px-4 py-3 text-center border-r border-rose-200">
+                                        <td class="px-4 py-3 text-center border-r border-white/5">
                                             <input type="number" value="${ins.amount}" step="0.01"
                                                    onchange="updateInsuranceAmount(${ins.id}, this.value)"
-                                                   class="w-32 px-2 py-1 text-center border border-rose-300 rounded bg-white focus:ring-2 focus:ring-rose-500">
+                                                   class="glass-input w-32 px-2 py-1 text-center rounded focus:ring-2 focus:ring-red-500">
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <button onclick="deleteInsurance(${ins.id})"
-                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                                    class="px-2 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors">🗑️</button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -1439,18 +1487,18 @@
             }
 
             document.getElementById('tabContent').innerHTML = `
-        <div class="secondary-bg text-white p-4 rounded-lg mb-6">
+        <div class="secondary-bg text-white p-6 rounded-lg mb-6">
             <h3 class="text-xl font-bold">🛡️ Insurance Payments</h3>
-            <p class="text-rose-100">Track your monthly insurance payments</p>
+            <p class="text-red-100">Track your monthly insurance payments</p>
         </div>
         ${yearSectionsHTML}
         ${insurance.length > 0 ? `
-            <div class="bg-gradient-to-r from-rose-100 to-rose-200 p-4 rounded-lg mt-4">
+            <div class="glass-card p-4 rounded-lg mt-4">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-rose-900">Total Insurance Payments:</span>
+                    <span class="font-semibold text-white">Total Insurance Payments:</span>
                     <div class="flex gap-6">
-                        <span class="font-bold text-rose-700">Entries: ${insurance.length}</span>
-                        <span class="font-bold text-rose-700">Total: $${totalInsurance.toFixed(2)}</span>
+                        <span class="font-bold text-red-400">Entries: ${insurance.length}</span>
+                        <span class="font-bold text-red-400">Total: $${totalInsurance.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -1469,10 +1517,10 @@
             let yearSectionsHTML = '';
             if (payroll.length === 0) {
                 yearSectionsHTML = `
-            <div class="text-center py-8 text-blue-600">
+            <div class="text-center py-8 text-slate-400">
                 <div class="text-6xl mb-4">💼</div>
-                <h3 class="text-xl font-semibold text-blue-700 mb-2">No Payroll Entries Yet</h3>
-                <p class="text-blue-600">Use the form above to add your first payroll entry!</p>
+                <h3 class="text-xl font-semibold text-white mb-2">No Payroll Entries Yet</h3>
+                <p class="text-slate-400">Use the form above to add your first payroll entry!</p>
             </div>
         `;
             } else {
@@ -1485,47 +1533,47 @@
                 <div class="year-section">
                     <div class="year-header" onclick="toggleYear('${tabKey}', '${year}')">
                         <div>
-                            <span class="font-semibold text-lg">${year}</span>
-                            <span class="ml-4 text-blue-600">${yearPayroll.length} entries</span>
+                            <span class="font-semibold text-lg text-white">${year}</span>
+                            <span class="ml-4 text-blue-400">${yearPayroll.length} entries</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-bold text-emerald-700">$${yearTotal.toFixed(2)}</span>
-                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span class="font-bold text-green-400">$${yearTotal.toFixed(2)}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="year-content ${isExpanded ? 'expanded' : ''}">
-                        <table class="w-full border border-blue-200 rounded-lg">
-                            <thead class="bg-blue-100">
+                        <table class="modern-table w-full">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-blue-900 border-r border-blue-200">Month</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Salary Hours</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Effective Rate</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-blue-900 border-r border-blue-200">Gross Pay</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-blue-900">Action</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white border-r border-white/10">Month</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Salary Hours</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Effective Rate</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white border-r border-white/10">Gross Pay</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-white">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-blue-50">
+                            <tbody>
                                 ${yearPayroll.map(pr => `
-                                    <tr class="border-b border-blue-200">
-                                        <td class="px-4 py-3 font-medium text-blue-900 border-r border-blue-200">
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-white border-r border-white/5">
                                             ${getMonthName(pr.month)}
                                         </td>
-                                        <td class="px-4 py-3 text-center text-blue-900 border-r border-blue-200">
+                                        <td class="px-4 py-3 text-center text-white border-r border-white/5">
                                             ${pr.hours}
                                         </td>
-                                        <td class="px-4 py-3 text-center text-blue-900 border-r border-blue-200">
+                                        <td class="px-4 py-3 text-center text-white border-r border-white/5">
                                             $${pr.rate.toFixed(2)}
                                         </td>
-                                        <td class="px-4 py-3 text-center border-r border-blue-200">
+                                        <td class="px-4 py-3 text-center border-r border-white/5">
                                             <input type="number" value="${pr.grossPay}" step="0.01"
                                                    onchange="updatePayrollGross(${pr.id}, this.value)"
-                                                   class="w-28 px-2 py-1 text-center font-bold text-emerald-700 border border-blue-300 rounded bg-white focus:ring-2 focus:ring-blue-500">
+                                                   class="glass-input w-28 px-2 py-1 text-center font-bold text-green-400 rounded focus:ring-2 focus:ring-blue-500">
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <button onclick="deletePayroll(${pr.id})"
-                                                    class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded">🗑️</button>
+                                                    class="px-2 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors">🗑️</button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -1538,18 +1586,18 @@
             }
 
             document.getElementById('tabContent').innerHTML = `
-        <div class="quinary-bg text-white p-4 rounded-lg mb-6">
+        <div class="quinary-bg text-white p-6 rounded-lg mb-6">
             <h3 class="text-xl font-bold">💼 Payroll Entries</h3>
             <p class="text-blue-100">Track your monthly salary payments</p>
         </div>
         ${yearSectionsHTML}
         ${payroll.length > 0 ? `
-            <div class="bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-lg mt-4">
+            <div class="glass-card p-4 rounded-lg mt-4">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-blue-900">Total Payroll:</span>
+                    <span class="font-semibold text-white">Total Payroll:</span>
                     <div class="flex gap-6">
-                        <span class="font-bold text-blue-700">Entries: ${payroll.length}</span>
-                        <span class="font-bold text-blue-700">Total: $${totalPayroll.toFixed(2)}</span>
+                        <span class="font-bold text-blue-400">Entries: ${payroll.length}</span>
+                        <span class="font-bold text-blue-400">Total: $${totalPayroll.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -1638,7 +1686,7 @@
                     XLSX.utils.book_append_sheet(wb, payrollWS, "Payroll");
                 }
 
-                // 6. Summary sheet - UPDATED
+                // 6. Summary sheet
                 const totals = calculateGrandTotals();
                 const summaryData = [
                     { 'Category': 'Total Work Income', 'Amount': totals.companyTotals },
