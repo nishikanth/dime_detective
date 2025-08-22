@@ -10,17 +10,159 @@ body {
   box-sizing: border-box;
 }
 
-/* Basic styles for the app to work */
-.container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-.card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
-.btn { padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; transition: all 0.3s; }
-.btn-primary { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
-.btn:hover { transform: translateY(-2px); }
-.grid { display: grid; gap: 1rem; }
-.grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+/* Layout utilities */
+.min-h-screen { min-height: 100vh; }
+.max-w-md { max-width: 28rem; }
+.max-w-6xl { max-width: 72rem; }
+.w-full { width: 100%; }
+.mx-auto { margin-left: auto; margin-right: auto; }
 .text-center { text-align: center; }
-.text-white { color: white; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+
+/* Spacing */
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.mb-2 { margin-bottom: 0.5rem; }
 .mb-4 { margin-bottom: 1rem; }
-.p-4 { padding: 1rem; }
-.rounded { border-radius: 0.5rem; }
-input { padding: 0.5rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 0.5rem; background: rgba(255,255,255,0.05); color: white; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.gap-3 { gap: 0.75rem; }
+
+/* Colors and backgrounds */
+.text-white { color: white; }
+.text-slate-200 { color: #e2e8f0; }
+.text-slate-300 { color: #cbd5e1; }
+.text-slate-900 { color: #0f172a; }
+.text-blue-400 { color: #60a5fa; }
+.bg-white { background-color: white; }
+
+/* Glass effect backgrounds */
+.glass-bg {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-bg-light {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-bg-blue {
+  background: rgba(59, 130, 246, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Typography */
+.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.font-bold { font-weight: 700; }
+.font-medium { font-weight: 500; }
+
+/* Borders and shapes */
+.rounded-2xl { border-radius: 1rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-full { border-radius: 9999px; }
+.border-2 { border-width: 2px; }
+
+/* Shadows */
+.shadow-2xl { 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
+}
+
+/* Sizing */
+.w-8 { width: 2rem; }
+.h-8 { height: 2rem; }
+
+/* Transitions and interactions */
+.transition-all { 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.hover-lift:hover { 
+  transform: scale(1.02) translateY(-2px); 
+}
+
+.hover-shadow:hover { 
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+}
+
+.cursor-pointer { cursor: pointer; }
+
+.disabled-opacity:disabled { 
+  opacity: 0.5; 
+}
+
+/* Form elements */
+input, select, textarea {
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Buttons */
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-white {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-white:hover {
+  background: white;
+  transform: scale(1.02);
+}
+
+/* Loading spinner */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Utility for background gradients */
+.bg-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
