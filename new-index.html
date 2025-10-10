@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        /* Enhanced Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        /* Modern Tabs */
+        .tab-button {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-button:not(.active):hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-paid {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-partial {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Enhanced Cards */
+        .metric-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.6);
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(16, 185, 129, 0.9);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(59, 130, 246, 0.3);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Year Sections */
+        .year-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .year-header {
+            cursor: pointer;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .year-header:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .year-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .year-content.expanded {
+            max-height: 2000px;
+            padding: 1.5rem;
+        }
+
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+
+        .chevron.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Enhanced Table */
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .modern-table thead tr {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+        }
+
+        .modern-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #e2e8f0;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .modern-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modern-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .modern-table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* File Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .upload-area.drag-over {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        /* Gradient Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .fab {
+                bottom: 1rem;
+                right: 1rem;
+            }
+
+            .toast {
+                right: 1rem;
+                left: 1rem;
+                top: 1rem;
+            }
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Calculation Breakdown */
+        .calc-breakdown {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .calc-row:last-child {
+            border-bottom: none;
+            border-top: 2px solid rgba(59, 130, 246, 0.3);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loading-spinner mb-4 mx-auto"></div>
+            <p class="text-blue-400 text-lg">Loading Payment Tracker...</p>
+        </div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4">💰</div>
+                <h1 class="text-3xl font-bold text-white mb-2">Payment Tracker Pro</h1>
+                <p class="text-slate-300 mb-6">Track your client payments, payroll, and finances in one place</p>
+                
+                <button id="googleSignInBtn" class="w-full bg-white text-gray-800 font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-3">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                
+                <p class="text-xs text-slate-400 mt-4">
+                    🔒 Your data is encrypted and securely stored
+                </p>
+            </div>
+            
+            <div id="authError" class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="glass-card border-b border-white/10 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="text-3xl">💰</div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Payment Tracker Pro</h1>
+                            <p class="text-xs text-slate-400">Client Payments & Financial Overview</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <span class="status-badge status-paid">
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Synced
+                        </span>
+                        <div class="flex items-center gap-3">
+                            <img id="userAvatar" class="w-10 h-10 rounded-full border-2 border-blue-500/30" src="" alt="">
+                            <div class="hidden md:block">
+                                <div class="text-sm font-medium text-white" id="userName"></div>
+                                <button onclick="signOut()" class="text-xs text-blue-400 hover:text-blue-300">Sign Out</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto p-4 md:p-6">
+            <!-- Financial Summary Dashboard -->
+            <div id="dashboardSection" class="mb-6">
+                <h2 class="text-2xl font-bold text-white mb-4">📊 Financial Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="metric-card">
+                        <div class="text-sm text-slate-300 mb-1">Total Expected</div>
+                        <div class="text-2xl font-bold text-blue-400" id="totalExpected">$0.00</div>
+                        <div class="text-xs text-slate-400 mt-1">From all clients</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="text-sm text-slate-300 mb-1">Total Received</div>
+                        <div class="text-2xl font-bold text-green-400" id="totalReceived">$0.00</div>
+                        <div class="text-xs text-slate-400 mt-1">Payroll + extras</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="text-sm text-slate-300 mb-1">Deductions</div>
+                        <div class="text-2xl font-bold text-red-400" id="totalDeductions">$0.00</div>
+                        <div class="text-xs text-slate-400 mt-1">Insurance</div>
+                    </div>
+                    <div class="metric-card border-2 border-purple-500/30">
+                        <div class="text-sm text-slate-300 mb-1">Amount Owed</div>
+                        <div class="text-3xl font-bold text-purple-400" id="amountOwed">$0.00</div>
+                        <div class="text-xs text-slate-400 mt-1" id="owedStatus">Up to date</div>
+                    </div>
+                </div>
+
+                <!-- Calculation Breakdown -->
+                <div class="calc-breakdown mb-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">💡 Calculation Breakdown</h3>
+                    <div class="calc-row">
+                        <span class="text-slate-300">Work Income (Hours × Rates)</span>
+                        <span class="font-semibold text-green-400" id="calcWorkIncome">$0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="text-slate-300">Payroll Received</span>
+                        <span class="font-semibold text-blue-400" id="calcPayroll">-$0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="text-slate-300">Additional Payouts</span>
+                        <span class="font-semibold text-blue-400" id="calcExtras">-$0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="text-slate-300">Insurance Payments</span>
+                        <span class="font-semibold text-red-400" id="calcInsurance">-$0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="text-white">Amount Still Owed to You</span>
+                        <span class="font-bold" id="calcFinal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clients Management -->
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                    <span>🏢</span> Clients & Hourly Rates
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <input type="text" id="clientName" placeholder="Client name" class="glass-input px-4 py-2 rounded-lg">
+                    <input type="number" id="clientRate" placeholder="Hourly rate ($)" step="0.01" class="glass-input px-4 py-2 rounded-lg">
+                    <input type="number" id="clientDeduction" placeholder="Deduction %" step="0.01" value="0" class="glass-input px-4 py-2 rounded-lg">
+                    <button onclick="addClient()" class="btn-primary text-white font-semibold rounded-lg px-6 py-2 hover:opacity-90 transition-all">
+                        + Add Client
+                    </button>
+                </div>
+                <div id="clientsList" class="space-y-3"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div id="tabsContainer" class="glass-card rounded-xl overflow-hidden mb-6" style="display:none;">
+                <div class="flex overflow-x-auto border-b border-white/10" id="tabHeaders"></div>
+                <div id="tabContent" class="p-6"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="glass-card rounded-xl">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🚀</div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Let's Get Started!</h3>
+                    <p class="text-slate-300 mb-6 max-w-md mx-auto">Add your first client above to start tracking hours, payments, and manage your finances effectively.</p>
+                    <div class="flex flex-wrap gap-4 justify-center text-sm text-slate-400">
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400">✓</span> Track multiple clients
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400">✓</span> Monitor payments
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400">✓</span> Upload pay slips
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400">✓</span> Export reports
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Actions -->
+            <div class="mt-6 flex flex-wrap gap-3 justify-center">
+                <button onclick="exportToExcel()" class="btn-success text-white font-semibold rounded-lg px-6 py-3 hover:opacity-90 transition-all flex items-center gap-2">
+                    📊 Export Excel
+                </button>
+                <button onclick="exportToPDF()" class="btn-warning text-white font-semibold rounded-lg px-6 py-3 hover:opacity-90 transition-all flex items-center gap-2">
+                    📄 Export PDF
+                </button>
+                <button onclick="clearAllData()" class="btn-danger text-white font-semibold rounded-lg px-6 py-3 hover:opacity-90 transition-all flex items-center gap-2">
+                    🗑️ Clear All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="fab" onclick="showQuickAddMenu()" title="Quick Add">
+            <span class="text-2xl text-white">+</span>
+        </div>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div id="quickAddModal" class="modal-backdrop hidden" onclick="closeQuickAddMenu(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Quick Add</h3>
+                <button onclick="closeQuickAddMenu()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="showAddWorkModal()" class="w-full glass-card p-4 rounded-lg hover:bg-white/10 transition-all text-left flex items-center gap-3">
+                    <span class="text-2xl">⏱️</span>
+                    <div>
+                        <div class="font-semibold text-white">Add Work Hours</div>
+                        <div class="text-sm text-slate-400">Log hours for a client</div>
+                    </div>
+                </button>
+                
+                <button onclick="showAddPayoutModal()" class="w-full glass-card p-4 rounded-lg hover:bg-white/10 transition-all text-left flex items-center gap-3">
+                    <span class="text-2xl">💵</span>
+                    <div>
+                        <div class="font-semibold text-white">Add Extra Payout</div>
+                        <div class="text-sm text-slate-400">Additional payment received</div>
+                    </div>
+                </button>
+                
+                <button onclick="showAddInsuranceModal()" class="w-full glass-card p-4 rounded-lg hover:bg-white/10 transition-all text-left flex items-center gap-3">
+                    <span class="text-2xl">🛡️</span>
+                    <div>
+                        <div class="font-semibold text-white">Add Insurance Payment</div>
+                        <div class="text-sm text-slate-400">Monthly insurance deduction</div>
+                    </div>
+                </button>
+                
+                <button onclick="showAddPayrollModal()" class="w-full glass-card p-4 rounded-lg hover:bg-white/10 transition-all text-left flex items-center gap-3">
+                    <span class="text-2xl">💼</span>
+                    <div>
+                        <div class="font-semibold text-white">Add Payroll Entry</div>
+                        <div class="text-sm text-slate-400">Monthly paycheck received</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ FIREBASE CONFIGURATION ============
+        // 🔥 IMPORTANT: Replace with YOUR OWN Firebase config!
+        // DO NOT use the config from the original file
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3VIo4ipzTw-ZBcVXeySUv_DwmDfADi50",
+            authDomain: "dime-detective-pro.firebaseapp.com",
+            projectId: "dime-detective-pro",
+            storageBucket: "dime-detective-pro.firebasestorage.app",
+            messagingSenderId: "572081511437",
+            appId: "1:572081511437:web:31e43d8c6e0a853d6bc944"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Google Auth Provider
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        
+        // ============ GLOBAL STATE ============
+        let currentUser = null;
+        let clients = [];
+        let workEntries = [];
+        let extraPayouts = [];
+        let insurance = [];
+        let payroll = [];
+        let payslips = {};
+        let activeTab = 'dashboard';
+        let activeClientId = null;
+        let expandedYears = {};
+
+        // ============ AUTH FUNCTIONS ============
+        function showAuthScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            document.getElementById('userName').textContent = currentUser.displayName;
+            document.getElementById('userAvatar').src = currentUser.photoURL || 
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName);
+        }
+
+        async function signInWithGoogle() {
+            try {
+                const result = await auth.signInWithPopup(googleProvider);
+                currentUser = result.user;
+                showToast('Welcome back, ' + currentUser.displayName + '!', 'success');
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                showAuthError('Sign-in failed. Please try again.');
+            }
+        }
+
+        async function signOut() {
+            if (confirm('Are you sure you want to sign out?')) {
+                try {
+                    await auth.signOut();
+                    currentUser = null;
+                    resetState();
+                    showAuthScreen();
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                }
+            }
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // ============ DATA SYNC FUNCTIONS ============
+        async function saveData() {
+            if (!currentUser) return;
+
+            const userData = {
+                clients,
+                workEntries,
+                extraPayouts,
+                insurance,
+                payroll,
+                payslips,
+                expandedYears,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('users').doc(currentUser.uid).set(userData);
+                console.log('✅ Data saved');
+            } catch (error) {
+                console.error('❌ Save error:', error);
+                showToast('Failed to save data', 'error');
+            }
+        }
+
+        async function loadData() {
+            if (!currentUser) return;
+
+            try {
+                const doc = await db.collection('users').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    clients = data.clients || [];
+                    workEntries = data.workEntries || [];
+                    extraPayouts = data.extraPayouts || [];
+                    insurance = data.insurance || [];
+                    payroll = data.payroll || [];
+                    payslips = data.payslips || {};
+                    expandedYears = data.expandedYears || {};
+                    console.log('✅ Data loaded');
+                }
+            } catch (error) {
+                console.error('❌ Load error:', error);
+                showToast('Failed to load data', 'error');
+            }
+        }
+
+        // ============ AUTH STATE LISTENER ============
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadData();
+                showMainApp();
+                renderAll();
+            } else {
+                showAuthScreen();
+            }
+        });
+
+        // ============ CLIENT MANAGEMENT ============
+        async function addClient() {
+            const name = document.getElementById('clientName').value.trim();
+            const rate = parseFloat(document.getElementById('clientRate').value);
+            const deduction = parseFloat(document.getElementById('clientDeduction').value) || 0;
+
+            if (!name || !rate) {
+                showToast('Please fill in client name and rate', 'error');
+                return;
+            }
+
+            const actualRate = rate - (rate * deduction / 100);
+            
+            clients.push({
+                id: Date.now(),
+                name,
+                baseRate: rate,
+                deductionPercent: deduction,
+                actualRate: parseFloat(actualRate.toFixed(2))
+            });
+
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientRate').value = '';
+            document.getElementById('clientDeduction').value = '0';
+
+            await saveData();
+            renderAll();
+            showToast('Client added successfully', 'success');
+        }
+
+        async function deleteClient(id) {
+            if (confirm('Delete this client and all related work entries?')) {
+                clients = clients.filter(c => c.id !== id);
+                workEntries = workEntries.filter(w => w.clientId !== id);
+                await saveData();
+                renderAll();
+                showToast('Client deleted', 'success');
+            }
+        }
+
+        // ============ CALCULATIONS ============
+        function calculateFinancials() {
+            // Total expected from all work
+            const totalExpected = workEntries.reduce((sum, w) => {
+                const client = clients.find(c => c.id === w.clientId);
+                return sum + (w.hours * (client ? client.actualRate : 0));
+            }, 0);
+
+            // Total payroll received
+            const totalPayroll = payroll.reduce((sum, p) => sum + p.grossPay, 0);
+
+            // Total extra payouts
+            const totalExtras = extraPayouts.reduce((sum, e) => sum + e.amount, 0);
+
+            // Total insurance deductions
+            const totalInsurance = insurance.reduce((sum, i) => sum + i.amount, 0);
+
+            // Total received = payroll + extras - insurance
+            const totalReceived = totalPayroll + totalExtras - totalInsurance;
+
+            // Amount owed = expected - received
+            const amountOwed = totalExpected - totalReceived;
+
+            return {
+                totalExpected,
+                totalPayroll,
+                totalExtras,
+                totalInsurance,
+                totalReceived,
+                amountOwed
+            };
+        }
+
+        // ============ UI RENDERING ============
+        function renderAll() {
+            renderClients();
+            renderDashboard();
+            renderTabs();
+        }
+
+        function renderClients() {
+            const container = document.getElementById('clientsList');
+            const emptyState = document.getElementById('emptyState');
+            const tabsContainer = document.getElementById('tabsContainer');
+
+            if (clients.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-400 py-4">No clients added yet</p>';
+                emptyState.style.display = 'block';
+                tabsContainer.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            tabsContainer.style.display = 'block';
+
+            container.innerHTML = clients.map(client => {
+                const totalHours = workEntries
+                    .filter(w => w.clientId === client.id)
+                    .reduce((sum, w) => sum + w.hours, 0);
+                const totalEarned = workEntries
+                    .filter(w => w.clientId === client.id)
+                    .reduce((sum, w) => sum + (w.hours * client.actualRate), 0);
+
+                return `
+                    <div class="glass-card rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-white text-lg">${client.name}</h3>
+                            <p class="text-sm text-slate-300">
+                                Base: ${client.baseRate.toFixed(2)}/hr
+                                ${client.deductionPercent > 0 ? `(-${client.deductionPercent}%)` : ''}
+                                → <strong class="text-blue-400">${client.actualRate.toFixed(2)}/hr</strong>
+                            </p>
+                            <p class="text-xs text-slate-400 mt-1">
+                                ${totalHours.toFixed(1)} hours • ${totalEarned.toFixed(2)} earned
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="switchTab('client', ${client.id})" 
+                                    class="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors">
+                                View
+                            </button>
+                            <button onclick="deleteClient(${client.id})" 
+                                    class="px-3 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDashboard() {
+            const financials = calculateFinancials();
+            
+            document.getElementById('totalExpected').textContent = '$' + financials.totalExpected.toFixed(2);
+            document.getElementById('totalReceived').textContent = '$' + financials.totalReceived.toFixed(2);
+            document.getElementById('totalDeductions').textContent = '$' + financials.totalInsurance.toFixed(2);
+            document.getElementById('amountOwed').textContent = '$' + Math.abs(financials.amountOwed).toFixed(2);
+            
+            const owedStatus = document.getElementById('owedStatus');
+            if (financials.amountOwed > 0) {
+                owedStatus.textContent = 'You are owed';
+                owedStatus.className = 'text-xs text-purple-300';
+            } else if (financials.amountOwed < 0) {
+                owedStatus.textContent = 'You have overpaid';
+                owedStatus.className = 'text-xs text-red-300';
+            } else {
+                owedStatus.textContent = 'All settled up!';
+                owedStatus.className = 'text-xs text-green-300';
+            }
+
+            // Update breakdown
+            document.getElementById('calcWorkIncome').textContent = '+ $' + financials.totalExpected.toFixed(2);
+            document.getElementById('calcPayroll').textContent = '- $' + financials.totalPayroll.toFixed(2);
+            document.getElementById('calcExtras').textContent = '- $' + financials.totalExtras.toFixed(2);
+            document.getElementById('calcInsurance').textContent = '- $' + financials.totalInsurance.toFixed(2);
+            const calcFinal = document.getElementById('calcFinal');
+            // calcFinal.textContent = ' + financials.amountOwed.toFixed(2);
+            calcFinal.className = financials.amountOwed >= 0 ? 'font-bold text-purple-400' : 'font-bold text-red-400';
+        }
+
+        function renderTabs() {
+            const tabHeaders = document.getElementById('tabHeaders');
+            const tabContent = document.getElementById('tabContent');
+
+            if (clients.length === 0) return;
+
+            let tabsHTML = '';
+            
+            // Client tabs
+            clients.forEach(client => {
+                const isActive = activeTab === 'client' && activeClientId === client.id;
+                tabsHTML += `
+                    <button onclick="switchTab('client', ${client.id})" 
+                            class="tab-button px-6 py-4 ${isActive ? 'active bg-blue-500/10 text-blue-400' : 'text-slate-300 hover:text-blue-400'}">
+                        <div class="font-semibold">${client.name}</div>
+                    </button>
+                `;
+            });
+
+            // Other tabs
+            const tabs = [
+                { id: 'payouts', label: '💵 Extra Payouts', color: 'green' },
+                { id: 'insurance', label: '🛡️ Insurance', color: 'red' },
+                { id: 'payroll', label: '💼 Payroll', color: 'blue' }
+            ];
+
+            tabs.forEach(tab => {
+                const isActive = activeTab === tab.id;
+                tabsHTML += `
+                    <button onclick="switchTab('${tab.id}')" 
+                            class="tab-button px-6 py-4 ${isActive ? 'active bg-' + tab.color + '-500/10 text-' + tab.color + '-400' : 'text-slate-300 hover:text-' + tab.color + '-400'}">
+                        <div class="font-semibold">${tab.label}</div>
+                    </button>
+                `;
+            });
+
+            tabHeaders.innerHTML = tabsHTML;
+
+            // Set default tab
+            if (activeTab === 'dashboard' || (activeTab === 'client' && !clients.find(c => c.id === activeClientId))) {
+                activeTab = 'client';
+                activeClientId = clients[0].id;
+            }
+
+            // Render content
+            if (activeTab === 'client') {
+                renderClientContent();
+            } else if (activeTab === 'payouts') {
+                renderPayoutsContent();
+            } else if (activeTab === 'insurance') {
+                renderInsuranceContent();
+            } else if (activeTab === 'payroll') {
+                renderPayrollContent();
+            }
+        }
+
+        function renderClientContent() {
+            const client = clients.find(c => c.id === activeClientId);
+            if (!client) return;
+
+            const entries = workEntries.filter(w => w.clientId === client.id);
+            const byYear = groupByYear(entries, e => e.year);
+            const years = Object.keys(byYear).sort((a, b) => b - a);
+
+            let content = `
+                <div class="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-white mb-2">${client.name}</h3>
+                    <p class="text-slate-300">
+                        Rate: ${client.actualRate.toFixed(2)}/hour
+                        ${client.deductionPercent > 0 ? `(${client.deductionPercent}% deduction applied)` : ''}
+                    </p>
+                </div>
+
+                <button onclick="showAddWorkModal(${client.id})" class="btn-primary text-white font-semibold rounded-lg px-6 py-3 mb-6 w-full md:w-auto">
+                    + Add Work Hours
+                </button>
+            `;
+
+            if (entries.length === 0) {
+                content += `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⏱️</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">No work hours logged yet</h3>
+                        <p class="text-slate-400">Start tracking your hours for ${client.name}</p>
+                    </div>
+                `;
+            } else {
+                years.forEach(year => {
+                    const yearEntries = byYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                    const yearTotal = yearEntries.reduce((sum, e) => sum + (e.hours * client.actualRate), 0);
+                    const isExpanded = expandedYears[`client-${client.id}`]?.[year];
+
+                    content += `
+                        <div class="year-section">
+                            <div class="year-header" onclick="toggleYear('client-${client.id}', '${year}')">
+                                <div>
+                                    <span class="font-semibold text-lg text-white">${year}</span>
+                                    <span class="ml-4 text-blue-400">${yearEntries.length} entries</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-green-400">${yearTotal.toFixed(2)}</span>
+                                    <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th class="text-center">Hours</th>
+                                            <th class="text-center">Rate</th>
+                                            <th class="text-center">Total</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${yearEntries.map(entry => `
+                                            <tr>
+                                                <td class="font-medium text-white">${getMonthName(entry.month)}</td>
+                                                <td class="text-center">
+                                                    <input type="number" value="${entry.hours}" step="0.5" 
+                                                           onchange="updateWorkHours(${entry.id}, this.value)"
+                                                           class="glass-input w-24 px-2 py-1 text-center rounded">
+                                                </td>
+                                                <td class="text-center text-slate-300">${client.actualRate.toFixed(2)}</td>
+                                                <td class="text-center font-bold text-green-400">${(entry.hours * client.actualRate).toFixed(2)}</td>
+                                                <td class="text-center">
+                                                    <button onclick="deleteWorkEntry(${entry.id})" class="text-red-400 hover:text-red-300">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = content;
+        }
+
+        function renderPayoutsContent() {
+            let content = `
+                <div class="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-white mb-2">💵 Additional Payouts</h3>
+                    <p class="text-slate-300">Track extra payments received outside of regular payroll</p>
+                </div>
+
+                <button onclick="showAddPayoutModal()" class="btn-success text-white font-semibold rounded-lg px-6 py-3 mb-6 w-full md:w-auto">
+                    + Add Payout
+                </button>
+            `;
+
+            if (extraPayouts.length === 0) {
+                content += `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💵</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">No extra payouts recorded</h3>
+                        <p class="text-slate-400">Log additional payments you receive</p>
+                    </div>
+                `;
+            } else {
+                const byYear = groupByYear(extraPayouts, e => new Date(e.date).getFullYear());
+                const years = Object.keys(byYear).sort((a, b) => b - a);
+
+                years.forEach(year => {
+                    const yearPayouts = byYear[year].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    const yearTotal = yearPayouts.reduce((sum, p) => sum + p.amount, 0);
+                    const isExpanded = expandedYears['payouts']?.[year];
+
+                    content += `
+                        <div class="year-section">
+                            <div class="year-header" onclick="toggleYear('payouts', '${year}')">
+                                <div>
+                                    <span class="font-semibold text-lg text-white">${year}</span>
+                                    <span class="ml-4 text-green-400">${yearPayouts.length} payouts</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-green-400">${yearTotal.toFixed(2)}</span>
+                                    <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th class="text-center">Amount</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${yearPayouts.map(payout => `
+                                            <tr>
+                                                <td class="font-medium text-white">${new Date(payout.date).toLocaleDateString()}</td>
+                                                <td class="text-slate-300">${payout.description}</td>
+                                                <td class="text-center">
+                                                    <input type="number" value="${payout.amount}" step="0.01"
+                                                           onchange="updatePayoutAmount(${payout.id}, this.value)"
+                                                           class="glass-input w-32 px-2 py-1 text-center rounded">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button onclick="deletePayout(${payout.id})" class="text-red-400 hover:text-red-300">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = content;
+        }
+
+        function renderInsuranceContent() {
+            let content = `
+                <div class="bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-white mb-2">🛡️ Insurance Payments</h3>
+                    <p class="text-slate-300">Track monthly health insurance deductions</p>
+                </div>
+
+                <button onclick="showAddInsuranceModal()" class="btn-danger text-white font-semibold rounded-lg px-6 py-3 mb-6 w-full md:w-auto">
+                    + Add Insurance Payment
+                </button>
+            `;
+
+            if (insurance.length === 0) {
+                content += `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">No insurance payments recorded</h3>
+                        <p class="text-slate-400">Start tracking your monthly insurance costs</p>
+                    </div>
+                `;
+            } else {
+                const byYear = groupByYear(insurance, i => i.year);
+                const years = Object.keys(byYear).sort((a, b) => b - a);
+
+                years.forEach(year => {
+                    const yearInsurance = byYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                    const yearTotal = yearInsurance.reduce((sum, i) => sum + i.amount, 0);
+                    const isExpanded = expandedYears['insurance']?.[year];
+
+                    content += `
+                        <div class="year-section">
+                            <div class="year-header" onclick="toggleYear('insurance', '${year}')">
+                                <div>
+                                    <span class="font-semibold text-lg text-white">${year}</span>
+                                    <span class="ml-4 text-red-400">${yearInsurance.length} payments</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-red-400">${yearTotal.toFixed(2)}</span>
+                                    <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th class="text-center">Amount</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${yearInsurance.map(ins => `
+                                            <tr>
+                                                <td class="font-medium text-white">${getMonthName(ins.month)}</td>
+                                                <td class="text-center">
+                                                    <input type="number" value="${ins.amount}" step="0.01"
+                                                           onchange="updateInsuranceAmount(${ins.id}, this.value)"
+                                                           class="glass-input w-32 px-2 py-1 text-center rounded">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button onclick="deleteInsurance(${ins.id})" class="text-red-400 hover:text-red-300">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = content;
+        }
+
+        function renderPayrollContent() {
+            let content = `
+                <div class="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-white mb-2">💼 Payroll Entries</h3>
+                    <p class="text-slate-300">Track your monthly paychecks and salary information</p>
+                </div>
+
+                <button onclick="showAddPayrollModal()" class="btn-primary text-white font-semibold rounded-lg px-6 py-3 mb-6 w-full md:w-auto">
+                    + Add Payroll Entry
+                </button>
+            `;
+
+            if (payroll.length === 0) {
+                content += `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💼</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">No payroll entries yet</h3>
+                        <p class="text-slate-400">Start tracking your monthly paychecks</p>
+                    </div>
+                `;
+            } else {
+                const byYear = groupByYear(payroll, p => p.year);
+                const years = Object.keys(byYear).sort((a, b) => b - a);
+
+                years.forEach(year => {
+                    const yearPayroll = byYear[year].sort((a, b) => b.month.localeCompare(a.month));
+                    const yearTotal = yearPayroll.reduce((sum, p) => sum + p.grossPay, 0);
+                    const isExpanded = expandedYears['payroll']?.[year];
+
+                    content += `
+                        <div class="year-section">
+                            <div class="year-header" onclick="toggleYear('payroll', '${year}')">
+                                <div>
+                                    <span class="font-semibold text-lg text-white">${year}</span>
+                                    <span class="ml-4 text-blue-400">${yearPayroll.length} entries</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-green-400">${yearTotal.toFixed(2)}</span>
+                                    <svg class="chevron ${isExpanded ? 'expanded' : ''} w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="year-content ${isExpanded ? 'expanded' : ''}">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th class="text-center">Hours</th>
+                                            <th class="text-center">Rate</th>
+                                            <th class="text-center">Gross Pay</th>
+                                            <th class="text-center">Pay Slip</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${yearPayroll.map(pr => {
+                                            const monthKey = `${pr.year}-${pr.month}`;
+                                            const hasPayslip = payslips[monthKey];
+                                            return `
+                                                <tr>
+                                                    <td class="font-medium text-white">${getMonthName(pr.month)}</td>
+                                                    <td class="text-center text-slate-300">${pr.hours}</td>
+                                                    <td class="text-center text-slate-300">${pr.rate.toFixed(2)}</td>
+                                                    <td class="text-center">
+                                                        <input type="number" value="${pr.grossPay}" step="0.01"
+                                                               onchange="updatePayrollGross(${pr.id}, this.value)"
+                                                               class="glass-input w-32 px-2 py-1 text-center rounded">
+                                                    </td>
+                                                    <td class="text-center">
+                                                        ${hasPayslip ? `
+                                                            <button onclick="viewPayslip('${monthKey}')" 
+                                                                    class="status-badge status-paid cursor-pointer hover:opacity-80">
+                                                                📎 View
+                                                            </button>
+                                                        ` : `
+                                                            <label class="status-badge status-pending cursor-pointer hover:opacity-80">
+                                                                📤 Upload
+                                                                <input type="file" accept=".pdf,.jpg,.jpeg,.png" 
+                                                                       onchange="uploadPayslip('${monthKey}', this.files[0])"
+                                                                       class="hidden">
+                                                            </label>
+                                                        `}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button onclick="deletePayroll(${pr.id})" class="text-red-400 hover:text-red-300">🗑️</button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('tabContent').innerHTML = content;
+        }
+
+        // ============ HELPER FUNCTIONS ============
+        function getMonthName(month) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[parseInt(month) - 1] || '';
+        }
+
+        function groupByYear(items, getYear) {
+            const grouped = {};
+            items.forEach(item => {
+                const year = getYear(item);
+                if (!grouped[year]) grouped[year] = [];
+                grouped[year].push(item);
+            });
+            return grouped;
+        }
+
+        function toggleYear(context, year) {
+            if (!expandedYears[context]) expandedYears[context] = {};
+            expandedYears[context][year] = !expandedYears[context][year];
+            saveData();
+            renderTabs();
+        }
+
+        function switchTab(tab, clientId = null) {
+            activeTab = tab;
+            if (clientId) activeClientId = clientId;
+            renderTabs();
+        }
+
+        function resetState() {
+            clients = [];
+            workEntries = [];
+            extraPayouts = [];
+            insurance = [];
+            payroll = [];
+            payslips = {};
+            expandedYears = {};
+            activeTab = 'dashboard';
+            activeClientId = null;
+        }
+
+        // ============ TOAST NOTIFICATIONS ============
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.background = type === 'success' ? 
+                'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ============ MODAL FUNCTIONS ============
+        function showQuickAddMenu() {
+            document.getElementById('quickAddModal').classList.remove('hidden');
+        }
+
+        function closeQuickAddMenu(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('quickAddModal').classList.add('hidden');
+        }
+
+        function showAddWorkModal(clientId = null) {
+            closeQuickAddMenu();
+            
+            const client = clientId ? clients.find(c => c.id === clientId) : clients[0];
+            if (!client) {
+                showToast('Please add a client first', 'error');
+                return;
+            }
+
+            const currentYear = new Date().getFullYear();
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+
+            const html = `
+                <div class="modal-backdrop" onclick="closeModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <h3 class="text-xl font-bold text-white mb-6">⏱️ Add Work Hours</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Client</label>
+                                <select id="modalClientId" class="glass-input w-full px-4 py-2 rounded-lg">
+                                    ${clients.map(c => `
+                                        <option value="${c.id}" ${c.id === clientId ? 'selected' : ''}>${c.name}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Month</label>
+                                    <select id="modalMonth" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                                            const val = String(m).padStart(2, '0');
+                                            return `<option value="${val}" ${val === currentMonth ? 'selected' : ''}>${getMonthName(val)}</option>`;
+                                        }).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Year</label>
+                                    <select id="modalYear" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[currentYear-1, currentYear, currentYear+1].map(y => `
+                                            <option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Hours Worked</label>
+                                <input type="number" id="modalHours" step="0.5" placeholder="40" 
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="submitWorkEntry()" class="btn-primary text-white font-semibold rounded-lg px-6 py-3 flex-1">
+                                    Add Entry
+                                </button>
+                                <button onclick="closeModal()" class="glass-input text-slate-300 font-semibold rounded-lg px-6 py-3">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            document.body.appendChild(temp.firstElementChild);
+        }
+
+        function showAddPayoutModal() {
+            closeQuickAddMenu();
+            
+            const html = `
+                <div class="modal-backdrop" onclick="closeModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <h3 class="text-xl font-bold text-white mb-6">💵 Add Extra Payout</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Date</label>
+                                <input type="date" id="modalPayoutDate" class="glass-input w-full px-4 py-2 rounded-lg"
+                                       value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Description</label>
+                                <input type="text" id="modalPayoutDesc" placeholder="Bonus, reimbursement, etc."
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Amount ($)</label>
+                                <input type="number" id="modalPayoutAmount" step="0.01" placeholder="0.00"
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="submitPayout()" class="btn-success text-white font-semibold rounded-lg px-6 py-3 flex-1">
+                                    Add Payout
+                                </button>
+                                <button onclick="closeModal()" class="glass-input text-slate-300 font-semibold rounded-lg px-6 py-3">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            document.body.appendChild(temp.firstElementChild);
+        }
+
+        function showAddInsuranceModal() {
+            closeQuickAddMenu();
+            
+            const currentYear = new Date().getFullYear();
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+
+            const html = `
+                <div class="modal-backdrop" onclick="closeModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <h3 class="text-xl font-bold text-white mb-6">🛡️ Add Insurance Payment</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Month</label>
+                                    <select id="modalInsMonth" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                                            const val = String(m).padStart(2, '0');
+                                            return `<option value="${val}" ${val === currentMonth ? 'selected' : ''}>${getMonthName(val)}</option>`;
+                                        }).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Year</label>
+                                    <select id="modalInsYear" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[currentYear-1, currentYear, currentYear+1].map(y => `
+                                            <option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Amount ($)</label>
+                                <input type="number" id="modalInsAmount" step="0.01" placeholder="0.00"
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="submitInsurance()" class="btn-danger text-white font-semibold rounded-lg px-6 py-3 flex-1">
+                                    Add Payment
+                                </button>
+                                <button onclick="closeModal()" class="glass-input text-slate-300 font-semibold rounded-lg px-6 py-3">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            document.body.appendChild(temp.firstElementChild);
+        }
+
+        function showAddPayrollModal() {
+            closeQuickAddMenu();
+            
+            const currentYear = new Date().getFullYear();
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+
+            const html = `
+                <div class="modal-backdrop" onclick="closeModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <h3 class="text-xl font-bold text-white mb-6">💼 Add Payroll Entry</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Month</label>
+                                    <select id="modalPayMonth" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                                            const val = String(m).padStart(2, '0');
+                                            return `<option value="${val}" ${val === currentMonth ? 'selected' : ''}>${getMonthName(val)}</option>`;
+                                        }).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-slate-300 mb-2">Year</label>
+                                    <select id="modalPayYear" class="glass-input w-full px-4 py-2 rounded-lg">
+                                        ${[currentYear-1, currentYear, currentYear+1].map(y => `
+                                            <option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Salary Hours</label>
+                                <input type="number" id="modalPayHours" step="0.5" placeholder="160"
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-2">Gross Pay ($)</label>
+                                <input type="number" id="modalPayGross" step="0.01" placeholder="0.00"
+                                       class="glass-input w-full px-4 py-2 rounded-lg">
+                            </div>
+                            <p class="text-xs text-slate-400">Rate will be calculated automatically</p>
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="submitPayroll()" class="btn-primary text-white font-semibold rounded-lg px-6 py-3 flex-1">
+                                    Add Entry
+                                </button>
+                                <button onclick="closeModal()" class="glass-input text-slate-300 font-semibold rounded-lg px-6 py-3">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            document.body.appendChild(temp.firstElementChild);
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.querySelector('.modal-backdrop');
+            if (modal) modal.remove();
+        }
+
+        // ============ SUBMIT FUNCTIONS ============
+        async function submitWorkEntry() {
+            const clientId = parseInt(document.getElementById('modalClientId').value);
+            const month = document.getElementById('modalMonth').value;
+            const year = parseInt(document.getElementById('modalYear').value);
+            const hours = parseFloat(document.getElementById('modalHours').value);
+
+            if (!hours || hours <= 0) {
+                showToast('Please enter valid hours', 'error');
+                return;
+            }
+
+            const monthKey = `${year}-${month}`;
+            const existingIndex = workEntries.findIndex(
+                e => e.clientId === clientId && e.monthKey === monthKey
+            );
+
+            if (existingIndex >= 0) {
+                workEntries[existingIndex].hours = hours;
+            } else {
+                workEntries.push({
+                    id: Date.now(),
+                    clientId,
+                    monthKey,
+                    month,
+                    year,
+                    hours
+                });
+            }
+
+            await saveData();
+            renderAll();
+            closeModal();
+            showToast('Work hours added successfully', 'success');
+        }
+
+        async function submitPayout() {
+            const date = document.getElementById('modalPayoutDate').value;
+            const description = document.getElementById('modalPayoutDesc').value.trim();
+            const amount = parseFloat(document.getElementById('modalPayoutAmount').value);
+
+            if (!description || !amount || amount <= 0) {
+                showToast('Please fill all fields correctly', 'error');
+                return;
+            }
+
+            extraPayouts.push({
+                id: Date.now(),
+                date,
+                description,
+                amount
+            });
+
+            await saveData();
+            renderAll();
+            closeModal();
+            showToast('Extra payout added successfully', 'success');
+        }
+
+        async function submitInsurance() {
+            const month = document.getElementById('modalInsMonth').value;
+            const year = parseInt(document.getElementById('modalInsYear').value);
+            const amount = parseFloat(document.getElementById('modalInsAmount').value);
+
+            if (!amount || amount <= 0) {
+                showToast('Please enter valid amount', 'error');
+                return;
+            }
+
+            const monthKey = `${year}-${month}`;
+            const existingIndex = insurance.findIndex(i => i.monthKey === monthKey);
+
+            if (existingIndex >= 0) {
+                insurance[existingIndex].amount = amount;
+            } else {
+                insurance.push({
+                    id: Date.now(),
+                    monthKey,
+                    month,
+                    year,
+                    amount
+                });
+            }
+
+            await saveData();
+            renderAll();
+            closeModal();
+            showToast('Insurance payment added successfully', 'success');
+        }
+
+        async function submitPayroll() {
+            const month = document.getElementById('modalPayMonth').value;
+            const year = parseInt(document.getElementById('modalPayYear').value);
+            const hours = parseFloat(document.getElementById('modalPayHours').value);
+            const grossPay = parseFloat(document.getElementById('modalPayGross').value);
+
+            if (!hours || hours <= 0 || !grossPay || grossPay <= 0) {
+                showToast('Please fill all fields correctly', 'error');
+                return;
+            }
+
+            const rate = grossPay / hours;
+            const monthKey = `${year}-${month}`;
+            const existingIndex = payroll.findIndex(p => p.monthKey === monthKey);
+
+            if (existingIndex >= 0) {
+                payroll[existingIndex] = { ...payroll[existingIndex], hours, rate, grossPay };
+            } else {
+                payroll.push({
+                    id: Date.now(),
+                    monthKey,
+                    month,
+                    year,
+                    hours,
+                    rate,
+                    grossPay
+                });
+            }
+
+            await saveData();
+            renderAll();
+            closeModal();
+            showToast('Payroll entry added successfully', 'success');
+        }
+
+        // ============ UPDATE FUNCTIONS ============
+        async function updateWorkHours(id, newHours) {
+            const entry = workEntries.find(e => e.id === id);
+            if (entry) {
+                entry.hours = parseFloat(newHours) || 0;
+                await saveData();
+                renderAll();
+            }
+        }
+
+        async function updatePayoutAmount(id, newAmount) {
+            const payout = extraPayouts.find(p => p.id === id);
+            if (payout) {
+                payout.amount = parseFloat(newAmount) || 0;
+                await saveData();
+                renderAll();
+            }
+        }
+
+        async function updateInsuranceAmount(id, newAmount) {
+            const ins = insurance.find(i => i.id === id);
+            if (ins) {
+                ins.amount = parseFloat(newAmount) || 0;
+                await saveData();
+                renderAll();
+            }
+        }
+
+        async function updatePayrollGross(id, newGross) {
+            const pr = payroll.find(p => p.id === id);
+            if (pr) {
+                pr.grossPay = parseFloat(newGross) || 0;
+                pr.rate = pr.hours > 0 ? pr.grossPay / pr.hours : 0;
+                await saveData();
+                renderAll();
+            }
+        }
+
+        // ============ DELETE FUNCTIONS ============
+        async function deleteWorkEntry(id) {
+            if (confirm('Delete this work entry?')) {
+                workEntries = workEntries.filter(e => e.id !== id);
+                await saveData();
+                renderAll();
+                showToast('Work entry deleted', 'success');
+            }
+        }
+
+        async function deletePayout(id) {
+            if (confirm('Delete this payout?')) {
+                extraPayouts = extraPayouts.filter(p => p.id !== id);
+                await saveData();
+                renderAll();
+                showToast('Payout deleted', 'success');
+            }
+        }
+
+        async function deleteInsurance(id) {
+            if (confirm('Delete this insurance payment?')) {
+                insurance = insurance.filter(i => i.id !== id);
+                await saveData();
+                renderAll();
+                showToast('Insurance payment deleted', 'success');
+            }
+        }
+
+        async function deletePayroll(id) {
+            if (confirm('Delete this payroll entry?')) {
+                payroll = payroll.filter(p => p.id !== id);
+                await saveData();
+                renderAll();
+                showToast('Payroll entry deleted', 'success');
+            }
+        }
+
+        // ============ PAY SLIP FUNCTIONS ============
+        async function uploadPayslip(monthKey, file) {
+            if (!file) return;
+
+            showToast('Uploading pay slip...', 'success');
+
+            try {
+                const storageRef = storage.ref(`payslips/${currentUser.uid}/${monthKey}`);
+                await storageRef.put(file);
+                const downloadURL = await storageRef.getDownloadURL();
+
+                payslips[monthKey] = {
+                    url: downloadURL,
+                    filename: file.name,
+                    uploadedAt: new Date().toISOString()
+                };
+
+                await saveData();
+                renderTabs();
+                showToast('Pay slip uploaded successfully', 'success');
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('Failed to upload pay slip', 'error');
+            }
+        }
+
+        function viewPayslip(monthKey) {
+            const payslip = payslips[monthKey];
+            if (payslip) {
+                window.open(payslip.url, '_blank');
+            }
+        }
+
+        // ============ EXPORT FUNCTIONS ============
+        function exportToExcel() {
+            try {
+                const wb = XLSX.utils.book_new();
+
+                // Summary sheet
+                const financials = calculateFinancials();
+                const summaryData = [
+                    { Category: 'Total Expected (Work)', Amount: financials.totalExpected },
+                    { Category: 'Payroll Received', Amount: financials.totalPayroll },
+                    { Category: 'Extra Payouts', Amount: financials.totalExtras },
+                    { Category: 'Insurance Payments', Amount: financials.totalInsurance },
+                    { Category: '', Amount: '' },
+                    { Category: 'AMOUNT OWED TO YOU', Amount: financials.amountOwed }
+                ];
+                const summaryWS = XLSX.utils.json_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, summaryWS, 'Summary');
+
+                // Clients sheet
+                if (clients.length > 0) {
+                    const clientsData = clients.map(c => ({
+                        'Client Name': c.name,
+                        'Base Rate': c.baseRate,
+                        'Deduction %': c.deductionPercent,
+                        'Actual Rate': c.actualRate
+                    }));
+                    const clientsWS = XLSX.utils.json_to_sheet(clientsData);
+                    XLSX.utils.book_append_sheet(wb, clientsWS, 'Clients');
+                }
+
+                // Work entries per client
+                clients.forEach(client => {
+                    const entries = workEntries.filter(e => e.clientId === client.id);
+                    if (entries.length > 0) {
+                        const data = entries.map(e => ({
+                            Month: getMonthName(e.month),
+                            Year: e.year,
+                            Hours: e.hours,
+                            Rate: client.actualRate,
+                            Total: e.hours * client.actualRate
+                        }));
+                        const ws = XLSX.utils.json_to_sheet(data);
+                        const sheetName = client.name.substring(0, 31);
+                        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                    }
+                });
+
+                // Export other data...
+                if (extraPayouts.length > 0) {
+                    const data = extraPayouts.map(p => ({
+                        Date: p.date,
+                        Description: p.description,
+                        Amount: p.amount
+                    }));
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Extra Payouts');
+                }
+
+                if (insurance.length > 0) {
+                    const data = insurance.map(i => ({
+                        Month: getMonthName(i.month),
+                        Year: i.year,
+                        Amount: i.amount
+                    }));
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Insurance');
+                }
+
+                if (payroll.length > 0) {
+                    const data = payroll.map(p => ({
+                        Month: getMonthName(p.month),
+                        Year: p.year,
+                        Hours: p.hours,
+                        Rate: p.rate,
+                        'Gross Pay': p.grossPay
+                    }));
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Payroll');
+                }
+
+                const fileName = `payment-tracker-${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                showToast('Excel file exported successfully', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Export failed', 'error');
+            }
+        }
+
+        function exportToPDF() {
+            showToast('PDF export coming soon!', 'success');
+        }
+
+        async function clearAllData() {
+            if (confirm('Delete ALL data permanently? This cannot be undone!')) {
+                resetState();
+                await saveData();
+                renderAll();
+                showToast('All data cleared', 'success');
+            }
+        }
+
+        // ============ INITIALIZATION ============
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+            
+            // Enter key support
+            ['clientName', 'clientRate', 'clientDeduction'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('keypress', e => e.key === 'Enter' && addClient());
+            });
+
+            console.log('🚀 Payment Tracker Pro initialized');
+        });
+    </script>
+</body>
+</html>
