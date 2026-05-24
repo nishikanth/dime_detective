@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/dime_detective/static/css/main.cdf35135.css",
+    "main.js": "/dime_detective/static/js/main.cf6e9faa.js",
+    "static/js/453.f633b2e4.chunk.js": "/dime_detective/static/js/453.f633b2e4.chunk.js",
+    "index.html": "/dime_detective/index.html",
+    "main.cdf35135.css.map": "/dime_detective/static/css/main.cdf35135.css.map",
+    "main.cf6e9faa.js.map": "/dime_detective/static/js/main.cf6e9faa.js.map",
+    "453.f633b2e4.chunk.js.map": "/dime_detective/static/js/453.f633b2e4.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.cdf35135.css",
+    "static/js/main.cf6e9faa.js"
+  ]
+}
