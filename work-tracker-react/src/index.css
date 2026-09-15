@@ -1052,6 +1052,63 @@ body {
 .amount-positive { color: #34d399 !important; font-weight: 600; }
 .amount-negative { color: #f87171 !important; font-weight: 600; }
 
+/* ── Collapsible Year Groups ──────────────────────────────────────────── */
+.year-group {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.year-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.year-group-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.year-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #e2e8f0;
+}
+
+.year-group-meta {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #475569;
+}
+
+.year-group-total {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #34d399;
+  font-variant-numeric: tabular-nums;
+}
+
+.year-chevron {
+  display: inline-block;
+  transition: transform 0.15s ease;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.year-chevron-open {
+  transform: rotate(90deg);
+}
+
 /* ── Badges ───────────────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
