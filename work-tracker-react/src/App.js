@@ -499,33 +499,41 @@ const WorkEntrySection = ({ companies, workRecords, onAddRecord, onDeleteRecord 
               </div>
               <span className="data-section-total">{fmt(total)}</span>
             </div>
-            {yearGroups.map(({ year, records: yearRecordsRaw }) => {
+            {yearGroups.map(({ year, records: yearRecordsRaw }, idx) => {
               const yearKey = `company-${company.id}-${year}`;
               const yearRecords = [...yearRecordsRaw].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
               const yearTotal = yearRecords.reduce((s, r) => s + r.hours * r.rate, 0);
               const isExpanded = isYearExpanded(yearKey);
+
+              const table = (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Period</th><th>Hours</th><th>Rate</th><th>Earnings</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {yearRecords.map(r => (
+                      <tr key={r.id}>
+                        <td>{MONTHS.find(m => m.value === r.month)?.label} {r.year}</td>
+                        <td>{r.hours}h</td>
+                        <td className="td-muted">{fmt(r.rate)}/hr</td>
+                        <td className="amount-positive">{fmt(r.hours * r.rate)}</td>
+                        <td>
+                          <button className="btn-del" onClick={() => { onDeleteRecord(r.id); toast('Entry deleted'); }}>✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+
+              // Most recent year is shown ungrouped (no accordion); older years are collapsible
+              if (idx === 0) return <React.Fragment key={year}>{table}</React.Fragment>;
+
               return (
                 <YearGroup key={year} year={year} count={yearRecords.length}
                   unitLabel={yearRecords.length === 1 ? 'entry' : 'entries'} total={yearTotal}
                   isExpanded={isExpanded} onToggle={() => toggleYear(yearKey)}>
-                  <table className="data-table">
-                    <thead>
-                      <tr><th>Period</th><th>Hours</th><th>Rate</th><th>Earnings</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                      {yearRecords.map(r => (
-                        <tr key={r.id}>
-                          <td>{MONTHS.find(m => m.value === r.month)?.label} {r.year}</td>
-                          <td>{r.hours}h</td>
-                          <td className="td-muted">{fmt(r.rate)}/hr</td>
-                          <td className="amount-positive">{fmt(r.hours * r.rate)}</td>
-                          <td>
-                            <button className="btn-del" onClick={() => { onDeleteRecord(r.id); toast('Entry deleted'); }}>✕</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {table}
                 </YearGroup>
               );
             })}
@@ -615,34 +623,42 @@ const ExpensesSection = ({ expenses, onAddExpense, onDeleteExpense }) => {
             <span>All Entries ({expenses.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          {yearGroups.map(({ year, records }) => {
+          {yearGroups.map(({ year, records }, idx) => {
             const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
             const yearTotal = sorted.reduce((s, e) => s + e.amount, 0);
             const yearKey = `expenses-${year}`;
+
+            const table = (
+              <table className="data-table">
+                <thead>
+                  <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {sorted.map(e => (
+                    <tr key={e.id}>
+                      <td className="td-muted">{e.date}</td>
+                      <td>{e.name}</td>
+                      <td>
+                        <span className={`badge ${e.type === 'income' ? 'badge-green' : 'badge-purple'}`}>
+                          {e.type === 'income' ? '💰 Other' : '💸 Business'}
+                        </span>
+                      </td>
+                      <td className="amount-positive">{fmt(e.amount)}</td>
+                      <td><button className="btn-del" onClick={() => { onDeleteExpense(e.id); toast('Entry deleted'); }}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+
+            // Most recent year is shown ungrouped (no accordion); older years are collapsible
+            if (idx === 0) return <React.Fragment key={year}>{table}</React.Fragment>;
+
             return (
               <YearGroup key={year} year={year} count={sorted.length}
                 unitLabel={sorted.length === 1 ? 'entry' : 'entries'} total={yearTotal}
                 isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
-                <table className="data-table">
-                  <thead>
-                    <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th></th></tr>
-                  </thead>
-                  <tbody>
-                    {sorted.map(e => (
-                      <tr key={e.id}>
-                        <td className="td-muted">{e.date}</td>
-                        <td>{e.name}</td>
-                        <td>
-                          <span className={`badge ${e.type === 'income' ? 'badge-green' : 'badge-purple'}`}>
-                            {e.type === 'income' ? '💰 Other' : '💸 Business'}
-                          </span>
-                        </td>
-                        <td className="amount-positive">{fmt(e.amount)}</td>
-                        <td><button className="btn-del" onClick={() => { onDeleteExpense(e.id); toast('Entry deleted'); }}>✕</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {table}
               </YearGroup>
             );
           })}
@@ -729,26 +745,34 @@ const InsuranceSection = ({ insurance, onAddInsurance, onDeleteInsurance }) => {
             <span>All Payments ({insurance.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          {yearGroups.map(({ year, records }) => {
+          {yearGroups.map(({ year, records }, idx) => {
             const sorted = [...records].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
             const yearTotal = sorted.reduce((s, i) => s + i.amount, 0);
             const yearKey = `insurance-${year}`;
+
+            const table = (
+              <table className="data-table">
+                <thead><tr><th>Period</th><th>Amount</th><th></th></tr></thead>
+                <tbody>
+                  {sorted.map(i => (
+                    <tr key={i.id}>
+                      <td>{MONTHS.find(m => m.value === i.month)?.label} {i.year}</td>
+                      <td className="amount-negative">{fmt(i.amount)}</td>
+                      <td><button className="btn-del" onClick={() => { onDeleteInsurance(i.id); toast('Entry deleted'); }}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+
+            // Most recent year is shown ungrouped (no accordion); older years are collapsible
+            if (idx === 0) return <React.Fragment key={year}>{table}</React.Fragment>;
+
             return (
               <YearGroup key={year} year={year} count={sorted.length}
                 unitLabel={sorted.length === 1 ? 'payment' : 'payments'} total={yearTotal}
                 isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
-                <table className="data-table">
-                  <thead><tr><th>Period</th><th>Amount</th><th></th></tr></thead>
-                  <tbody>
-                    {sorted.map(i => (
-                      <tr key={i.id}>
-                        <td>{MONTHS.find(m => m.value === i.month)?.label} {i.year}</td>
-                        <td className="amount-negative">{fmt(i.amount)}</td>
-                        <td><button className="btn-del" onClick={() => { onDeleteInsurance(i.id); toast('Entry deleted'); }}>✕</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {table}
               </YearGroup>
             );
           })}
@@ -854,28 +878,36 @@ const PayrollSection = ({ payroll, onAddPayroll, onDeletePayroll }) => {
             <span>All Entries ({payroll.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          {yearGroups.map(({ year, records }) => {
+          {yearGroups.map(({ year, records }, idx) => {
             const sorted = [...records].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
             const yearTotal = sorted.reduce((s, p) => s + p.grossPay, 0);
             const yearKey = `payroll-${year}`;
+
+            const table = (
+              <table className="data-table">
+                <thead><tr><th>Period</th><th>Hours</th><th>Rate</th><th>Gross Pay</th><th></th></tr></thead>
+                <tbody>
+                  {sorted.map(p => (
+                    <tr key={p.id}>
+                      <td>{MONTHS.find(m => m.value === p.month)?.label} {p.year}</td>
+                      <td>{p.hours}h</td>
+                      <td className="td-muted">{fmt(p.rate)}/hr</td>
+                      <td className="amount-positive">{fmt(p.grossPay)}</td>
+                      <td><button className="btn-del" onClick={() => { onDeletePayroll(p.id); toast('Entry deleted'); }}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+
+            // Most recent year is shown ungrouped (no accordion); older years are collapsible
+            if (idx === 0) return <React.Fragment key={year}>{table}</React.Fragment>;
+
             return (
               <YearGroup key={year} year={year} count={sorted.length}
                 unitLabel={sorted.length === 1 ? 'entry' : 'entries'} total={yearTotal}
                 isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
-                <table className="data-table">
-                  <thead><tr><th>Period</th><th>Hours</th><th>Rate</th><th>Gross Pay</th><th></th></tr></thead>
-                  <tbody>
-                    {sorted.map(p => (
-                      <tr key={p.id}>
-                        <td>{MONTHS.find(m => m.value === p.month)?.label} {p.year}</td>
-                        <td>{p.hours}h</td>
-                        <td className="td-muted">{fmt(p.rate)}/hr</td>
-                        <td className="amount-positive">{fmt(p.grossPay)}</td>
-                        <td><button className="btn-del" onClick={() => { onDeletePayroll(p.id); toast('Entry deleted'); }}>✕</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {table}
               </YearGroup>
             );
           })}
