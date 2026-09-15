@@ -1043,11 +1043,6 @@ body {
   transition: background 0.12s;
 }
 
-/* Zebra striping so adjacent rows are visually distinct */
-.data-table tbody tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.05);
-}
-
 .data-table tbody tr:hover td {
   background: rgba(59, 130, 246, 0.14);
 }
