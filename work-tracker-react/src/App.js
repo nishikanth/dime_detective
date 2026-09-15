@@ -359,14 +359,45 @@ const CompanyManager = ({ companies, onAddCompany, onEditCompany, onDeleteCompan
   );
 };
 
+// ── Collapsible Year Grouping (shared) ─────────────────────────────────────
+// All years start collapsed when the page loads; each key toggles independently.
+const useYearGroups = () => {
+  const [expandedYears, setExpandedYears] = useState({});
+  const toggleYear = (key) => setExpandedYears(p => ({ ...p, [key]: !p[key] }));
+  const isYearExpanded = (key) => !!expandedYears[key];
+  return { toggleYear, isYearExpanded };
+};
+
+// Groups records by year, sorted most-recent-first
+const groupByYear = (records, getYear) => {
+  const byYear = {};
+  records.forEach(r => {
+    const year = getYear(r);
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(r);
+  });
+  return Object.keys(byYear).sort((a, b) => b - a).map(year => ({ year, records: byYear[year] }));
+};
+
+const YearGroup = ({ year, count, unitLabel, total, isExpanded, onToggle, children }) => (
+  <div className="year-group">
+    <button type="button" className="year-group-header" onClick={onToggle}>
+      <span className="year-group-title">
+        <span className={`year-chevron ${isExpanded ? 'year-chevron-open' : ''}`}>▸</span>
+        {year}
+        <span className="year-group-meta">{count} {unitLabel}</span>
+      </span>
+      <span className="year-group-total">{fmt(total)}</span>
+    </button>
+    {isExpanded && children}
+  </div>
+);
+
 // ── Work Entry Section ────────────────────────────────────────────────────
 const WorkEntrySection = ({ companies, workRecords, onAddRecord, onDeleteRecord }) => {
   const [form, setForm] = useState({ companyId: '', month: '', year: '2025', hours: '', rate: '' });
-  const [expandedYears, setExpandedYears] = useState({});
+  const { toggleYear, isYearExpanded } = useYearGroups();
   const toast = useToast();
-
-  const toggleYear = (key, currentlyExpanded) =>
-    setExpandedYears(p => ({ ...p, [key]: !currentlyExpanded }));
 
   const handleCompanyChange = (cid) => {
     const c = companies.find(x => x.id === parseInt(cid));
@@ -457,13 +488,7 @@ const WorkEntrySection = ({ companies, workRecords, onAddRecord, onDeleteRecord 
       {Object.values(grouped).map(({ company, records }) => {
         const total = records.reduce((s, r) => s + r.hours * r.rate, 0);
         const totalHrs = records.reduce((s, r) => s + r.hours, 0);
-
-        const byYear = {};
-        records.forEach(r => {
-          if (!byYear[r.year]) byYear[r.year] = [];
-          byYear[r.year].push(r);
-        });
-        const years = Object.keys(byYear).sort((a, b) => b - a);
+        const yearGroups = groupByYear(records, r => r.year);
 
         return (
           <div key={company.id} className="data-section">
@@ -474,43 +499,34 @@ const WorkEntrySection = ({ companies, workRecords, onAddRecord, onDeleteRecord 
               </div>
               <span className="data-section-total">{fmt(total)}</span>
             </div>
-            {years.map((year, idx) => {
-              const yearKey = `${company.id}-${year}`;
-              const yearRecords = [...byYear[year]].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+            {yearGroups.map(({ year, records: yearRecordsRaw }) => {
+              const yearKey = `company-${company.id}-${year}`;
+              const yearRecords = [...yearRecordsRaw].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
               const yearTotal = yearRecords.reduce((s, r) => s + r.hours * r.rate, 0);
-              // Most recent year starts open; older years start collapsed
-              const isExpanded = expandedYears[yearKey] !== undefined ? expandedYears[yearKey] : idx === 0;
+              const isExpanded = isYearExpanded(yearKey);
               return (
-                <div key={year} className="year-group">
-                  <button type="button" className="year-group-header" onClick={() => toggleYear(yearKey, isExpanded)}>
-                    <span className="year-group-title">
-                      <span className={`year-chevron ${isExpanded ? 'year-chevron-open' : ''}`}>▸</span>
-                      {year}
-                      <span className="year-group-meta">{yearRecords.length} {yearRecords.length === 1 ? 'entry' : 'entries'}</span>
-                    </span>
-                    <span className="year-group-total">{fmt(yearTotal)}</span>
-                  </button>
-                  {isExpanded && (
-                    <table className="data-table">
-                      <thead>
-                        <tr><th>Period</th><th>Hours</th><th>Rate</th><th>Earnings</th><th></th></tr>
-                      </thead>
-                      <tbody>
-                        {yearRecords.map(r => (
-                          <tr key={r.id}>
-                            <td>{MONTHS.find(m => m.value === r.month)?.label} {r.year}</td>
-                            <td>{r.hours}h</td>
-                            <td className="td-muted">{fmt(r.rate)}/hr</td>
-                            <td className="amount-positive">{fmt(r.hours * r.rate)}</td>
-                            <td>
-                              <button className="btn-del" onClick={() => { onDeleteRecord(r.id); toast('Entry deleted'); }}>✕</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                <YearGroup key={year} year={year} count={yearRecords.length}
+                  unitLabel={yearRecords.length === 1 ? 'entry' : 'entries'} total={yearTotal}
+                  isExpanded={isExpanded} onToggle={() => toggleYear(yearKey)}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Period</th><th>Hours</th><th>Rate</th><th>Earnings</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                      {yearRecords.map(r => (
+                        <tr key={r.id}>
+                          <td>{MONTHS.find(m => m.value === r.month)?.label} {r.year}</td>
+                          <td>{r.hours}h</td>
+                          <td className="td-muted">{fmt(r.rate)}/hr</td>
+                          <td className="amount-positive">{fmt(r.hours * r.rate)}</td>
+                          <td>
+                            <button className="btn-del" onClick={() => { onDeleteRecord(r.id); toast('Entry deleted'); }}>✕</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </YearGroup>
               );
             })}
           </div>
@@ -530,6 +546,7 @@ const WorkEntrySection = ({ companies, workRecords, onAddRecord, onDeleteRecord 
 // ── Expenses / Received Section ───────────────────────────────────────────
 const ExpensesSection = ({ expenses, onAddExpense, onDeleteExpense }) => {
   const [form, setForm] = useState({ date: '', name: '', type: '', amount: '' });
+  const { toggleYear, isYearExpanded } = useYearGroups();
   const toast = useToast();
 
   const handleSubmit = () => {
@@ -543,10 +560,10 @@ const ExpensesSection = ({ expenses, onAddExpense, onDeleteExpense }) => {
     toast('Entry added!');
   };
 
-  const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date));
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const businessTotal = expenses.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
   const otherTotal = expenses.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0);
+  const yearGroups = groupByYear(expenses, e => new Date(e.date).getFullYear());
 
   return (
     <div>
@@ -592,32 +609,43 @@ const ExpensesSection = ({ expenses, onAddExpense, onDeleteExpense }) => {
         </div>
       )}
 
-      {sorted.length > 0 ? (
+      {expenses.length > 0 ? (
         <div className="data-section">
           <div className="data-section-header">
             <span>All Entries ({expenses.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          <table className="data-table">
-            <thead>
-              <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th></th></tr>
-            </thead>
-            <tbody>
-              {sorted.map(e => (
-                <tr key={e.id}>
-                  <td className="td-muted">{e.date}</td>
-                  <td>{e.name}</td>
-                  <td>
-                    <span className={`badge ${e.type === 'income' ? 'badge-green' : 'badge-purple'}`}>
-                      {e.type === 'income' ? '💰 Other' : '💸 Business'}
-                    </span>
-                  </td>
-                  <td className="amount-positive">{fmt(e.amount)}</td>
-                  <td><button className="btn-del" onClick={() => { onDeleteExpense(e.id); toast('Entry deleted'); }}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {yearGroups.map(({ year, records }) => {
+            const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
+            const yearTotal = sorted.reduce((s, e) => s + e.amount, 0);
+            const yearKey = `expenses-${year}`;
+            return (
+              <YearGroup key={year} year={year} count={sorted.length}
+                unitLabel={sorted.length === 1 ? 'entry' : 'entries'} total={yearTotal}
+                isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map(e => (
+                      <tr key={e.id}>
+                        <td className="td-muted">{e.date}</td>
+                        <td>{e.name}</td>
+                        <td>
+                          <span className={`badge ${e.type === 'income' ? 'badge-green' : 'badge-purple'}`}>
+                            {e.type === 'income' ? '💰 Other' : '💸 Business'}
+                          </span>
+                        </td>
+                        <td className="amount-positive">{fmt(e.amount)}</td>
+                        <td><button className="btn-del" onClick={() => { onDeleteExpense(e.id); toast('Entry deleted'); }}>✕</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </YearGroup>
+            );
+          })}
         </div>
       ) : (
         <div className="empty-state">
@@ -632,6 +660,7 @@ const ExpensesSection = ({ expenses, onAddExpense, onDeleteExpense }) => {
 // ── Insurance Section ─────────────────────────────────────────────────────
 const InsuranceSection = ({ insurance, onAddInsurance, onDeleteInsurance }) => {
   const [form, setForm] = useState({ month: '', year: '2025', amount: '' });
+  const { toggleYear, isYearExpanded } = useYearGroups();
   const toast = useToast();
 
   const handleSubmit = () => {
@@ -651,9 +680,9 @@ const InsuranceSection = ({ insurance, onAddInsurance, onDeleteInsurance }) => {
     toast('Insurance entry added!');
   };
 
-  const sorted = [...insurance].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
   const total = insurance.reduce((s, i) => s + i.amount, 0);
   const avgMonthly = insurance.length > 0 ? total / insurance.length : 0;
+  const yearGroups = groupByYear(insurance, i => i.year);
 
   return (
     <div>
@@ -694,24 +723,35 @@ const InsuranceSection = ({ insurance, onAddInsurance, onDeleteInsurance }) => {
         </div>
       )}
 
-      {sorted.length > 0 ? (
+      {insurance.length > 0 ? (
         <div className="data-section">
           <div className="data-section-header">
             <span>All Payments ({insurance.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          <table className="data-table">
-            <thead><tr><th>Period</th><th>Amount</th><th></th></tr></thead>
-            <tbody>
-              {sorted.map(i => (
-                <tr key={i.id}>
-                  <td>{MONTHS.find(m => m.value === i.month)?.label} {i.year}</td>
-                  <td className="amount-negative">{fmt(i.amount)}</td>
-                  <td><button className="btn-del" onClick={() => { onDeleteInsurance(i.id); toast('Entry deleted'); }}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {yearGroups.map(({ year, records }) => {
+            const sorted = [...records].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+            const yearTotal = sorted.reduce((s, i) => s + i.amount, 0);
+            const yearKey = `insurance-${year}`;
+            return (
+              <YearGroup key={year} year={year} count={sorted.length}
+                unitLabel={sorted.length === 1 ? 'payment' : 'payments'} total={yearTotal}
+                isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
+                <table className="data-table">
+                  <thead><tr><th>Period</th><th>Amount</th><th></th></tr></thead>
+                  <tbody>
+                    {sorted.map(i => (
+                      <tr key={i.id}>
+                        <td>{MONTHS.find(m => m.value === i.month)?.label} {i.year}</td>
+                        <td className="amount-negative">{fmt(i.amount)}</td>
+                        <td><button className="btn-del" onClick={() => { onDeleteInsurance(i.id); toast('Entry deleted'); }}>✕</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </YearGroup>
+            );
+          })}
         </div>
       ) : (
         <div className="empty-state">
@@ -726,6 +766,7 @@ const InsuranceSection = ({ insurance, onAddInsurance, onDeleteInsurance }) => {
 // ── Payroll Section ───────────────────────────────────────────────────────
 const PayrollSection = ({ payroll, onAddPayroll, onDeletePayroll }) => {
   const [form, setForm] = useState({ month: '', year: '2025', hours: '', rate: '', gross: '' });
+  const { toggleYear, isYearExpanded } = useYearGroups();
   const toast = useToast();
 
   const handleSubmit = () => {
@@ -752,9 +793,9 @@ const PayrollSection = ({ payroll, onAddPayroll, onDeletePayroll }) => {
     toast('Payroll entry added!');
   };
 
-  const sorted = [...payroll].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
   const total = payroll.reduce((s, p) => s + p.grossPay, 0);
   const totalHours = payroll.reduce((s, p) => s + p.hours, 0);
+  const yearGroups = groupByYear(payroll, p => p.year);
 
   return (
     <div>
@@ -807,26 +848,37 @@ const PayrollSection = ({ payroll, onAddPayroll, onDeletePayroll }) => {
         </div>
       )}
 
-      {sorted.length > 0 ? (
+      {payroll.length > 0 ? (
         <div className="data-section">
           <div className="data-section-header">
             <span>All Entries ({payroll.length})</span>
             <span className="data-section-total">{fmt(total)}</span>
           </div>
-          <table className="data-table">
-            <thead><tr><th>Period</th><th>Hours</th><th>Rate</th><th>Gross Pay</th><th></th></tr></thead>
-            <tbody>
-              {sorted.map(p => (
-                <tr key={p.id}>
-                  <td>{MONTHS.find(m => m.value === p.month)?.label} {p.year}</td>
-                  <td>{p.hours}h</td>
-                  <td className="td-muted">{fmt(p.rate)}/hr</td>
-                  <td className="amount-positive">{fmt(p.grossPay)}</td>
-                  <td><button className="btn-del" onClick={() => { onDeletePayroll(p.id); toast('Entry deleted'); }}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {yearGroups.map(({ year, records }) => {
+            const sorted = [...records].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+            const yearTotal = sorted.reduce((s, p) => s + p.grossPay, 0);
+            const yearKey = `payroll-${year}`;
+            return (
+              <YearGroup key={year} year={year} count={sorted.length}
+                unitLabel={sorted.length === 1 ? 'entry' : 'entries'} total={yearTotal}
+                isExpanded={isYearExpanded(yearKey)} onToggle={() => toggleYear(yearKey)}>
+                <table className="data-table">
+                  <thead><tr><th>Period</th><th>Hours</th><th>Rate</th><th>Gross Pay</th><th></th></tr></thead>
+                  <tbody>
+                    {sorted.map(p => (
+                      <tr key={p.id}>
+                        <td>{MONTHS.find(m => m.value === p.month)?.label} {p.year}</td>
+                        <td>{p.hours}h</td>
+                        <td className="td-muted">{fmt(p.rate)}/hr</td>
+                        <td className="amount-positive">{fmt(p.grossPay)}</td>
+                        <td><button className="btn-del" onClick={() => { onDeletePayroll(p.id); toast('Entry deleted'); }}>✕</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </YearGroup>
+            );
+          })}
         </div>
       ) : (
         <div className="empty-state">
